@@ -1,0 +1,4 @@
+fastapi==0.128.5
+firebase_admin==7.0.0
+pydantic==2.12.5
+Requests==2.32.5
