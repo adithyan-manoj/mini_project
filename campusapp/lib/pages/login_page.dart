@@ -362,7 +362,7 @@ class _LoginPageState extends State<LoginPage> {
                           height: 60,
                           width: 60,
                           decoration: BoxDecoration(
-                            color: const Color.fromARGB(255, 232, 232, 232),
+                            color: const Color.fromARGB(255, 123, 43, 43),
                             borderRadius: BorderRadius.circular(15),
                             boxShadow: [
                               BoxShadow(
