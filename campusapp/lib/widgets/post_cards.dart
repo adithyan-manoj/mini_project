@@ -1,20 +1,33 @@
+import 'package:campusapp/models/post_model.dart';
 import 'package:campusapp/pages/post_details.dart';
 import 'package:flutter/material.dart';
 
-class PostCard extends StatelessWidget {
+class PostCard extends StatefulWidget {
   final bool isDetails;
-  String postId;
-  PostCard({super.key, this.isDetails = false, required this.postId});
+  final PostModel post;
+  
+  const PostCard({super.key, this.isDetails = false, required this.post});
 
+  @override
+  State<PostCard> createState() => _PostCardState();
+}
+
+class _PostCardState extends State<PostCard> {
+  String _formatTime(DateTime time) {
+    final diff = DateTime.now().difference(time);
+    if (diff.inDays > 0) return "${diff.inDays}d";
+    if (diff.inHours > 0) return "${diff.inHours}h";
+    return "${diff.inMinutes}m";
+  }
   @override
   Widget build(BuildContext context) {
     return Hero(
-      tag: postId,
+      tag: widget.post.id,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: isDetails ? null : () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => PostDetailPage(postId: postId),));
+          onTap: widget.isDetails ? null : () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => PostDetailPage(post: widget.post),));
           },
         
           child: Container(
@@ -23,7 +36,7 @@ class PostCard extends StatelessWidget {
             width: MediaQuery.of(context).size.width,
             decoration: BoxDecoration(
               //color: Colors.white,
-              border: isDetails? null : Border.symmetric(
+              border: widget.isDetails? null : Border.symmetric(
                 horizontal: BorderSide(
                   color: const Color.fromARGB(255, 110, 110, 110),
                   width: .5,
@@ -33,24 +46,23 @@ class PostCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                  if(!widget.isDetails) ...[ Row(
                   children: [
                     const CircleAvatar(
                       radius: 15,
                       // add image
                     ),
                     const SizedBox(width: 10),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "Aashwin Suresh",
-                            style: TextStyle(color: Colors.white, fontSize: 15),
+                          Text(widget.post.userName,
+                            style: const TextStyle(color: Colors.white, fontSize: 15),
                           ),
                           Text(
-                            "4d",
-                            style: TextStyle(color: Colors.white, fontSize: 10),
+                            _formatTime(widget.post.postedTime),
+                            style: const TextStyle(color: Colors.white, fontSize: 10),
                           ),
                         ],
                       ),
@@ -60,16 +72,16 @@ class PostCard extends StatelessWidget {
                       icon: Icon(Icons.more_vert, color: Colors.white, size: 25),
                     ),
                   ],
-                ),
+                ),],
                 SizedBox(height: 2),
-                const Text(
-                  'Arjun as got pregnant',
-                  style: TextStyle(color: Colors.white, fontSize: 15),
+                Text(
+                  widget.post.title,
+                  style: const TextStyle(color: Colors.white, fontSize: 15),
                 ),
                 SizedBox(height: 2),
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                  child: Text("Can’t believe I’m finally sharing this news! It’s been a wild journey so far, and honestly, the cravings are already out of control. Thanks for all the support, everyone. Stay tuned for the ultrasound photos next week! #LifeUpdate #ModernMiracle #ArjunUpdate",style: TextStyle(color: Colors.white, fontSize: 15)),
+                  child: Text(widget.post.content,style: TextStyle(color: Colors.white, fontSize: 15)),
                   decoration: BoxDecoration(
                     border: Border.all(
                       color: const Color.fromARGB(96, 255, 255, 255),
@@ -81,19 +93,46 @@ class PostCard extends StatelessWidget {
                 SizedBox(height: 5,),
                 Row(
                   children: [
-                    _interactionButton(Icons.thumb_up_alt_outlined, '69'),
+                    _actionButton(
+                      icon: widget.post.isLikedByMe ? Icons.thumb_up : Icons.thumb_up_outlined,
+                      label: "${widget.post.likes}",
+                      color: widget.post.isLikedByMe ? Colors.blue : Colors.white,
+                      onTap: () => setState(() {
+                        widget.post.isLikedByMe = !widget.post.isLikedByMe;
+                        widget.post.isLikedByMe ? widget.post.likes++ : widget.post.likes--;
+                      }),
+                    ),
                     const SizedBox(width: 24),
-                    _interactionButton(Icons.comment_outlined, "100"),
+                    _actionButton(
+                      icon: Icons.comment_outlined,
+                      label: "${widget.post.commentCount}",
+                      color:Colors.white,
+                      onTap: () {}, 
+                    ),
+                  ],
+                ),
                   ],
                 )
-              ],
+              
             ),
           ),
         ),
+      );
+    
+  }
+  Widget _actionButton({required IconData icon, required String label, required Color color, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: color),
+          const SizedBox(width: 6),
+          Text(label, style: TextStyle(color: color)),
+        ],
       ),
     );
-    
-  }Widget _interactionButton(IconData icon, String label) {
+  }
+Widget _interactionButton(IconData icon, String label) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14,vertical: 5),
       decoration: BoxDecoration(
@@ -112,8 +151,6 @@ class PostCard extends StatelessWidget {
         ],
       ),
     );
-  }
-  
-}
+  }}
 
 

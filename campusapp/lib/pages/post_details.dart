@@ -1,11 +1,18 @@
 import 'package:campusapp/core/commant_model.dart';
+import 'package:campusapp/models/post_model.dart';
 import 'package:campusapp/widgets/post_cards.dart';
 import 'package:flutter/material.dart';
 
-class PostDetailPage extends StatelessWidget {
-  final String postId;
-  const PostDetailPage({super.key, required this.postId});
+class PostDetailPage extends StatefulWidget {
+  final PostModel post;
 
+  const PostDetailPage({super.key, required this.post});
+
+  @override
+  State<PostDetailPage> createState() => _PostDetailPageState();
+}
+
+class _PostDetailPageState extends State<PostDetailPage> {
   @override
   Widget build(BuildContext context) {
     List<CommentModel> dummyComments = [
@@ -29,12 +36,12 @@ class PostDetailPage extends StatelessWidget {
         centerTitle: true, // Centers the profile
         title: Row(
           mainAxisSize: MainAxisSize.min,
-          children: const [
-            CircleAvatar(radius: 14, backgroundColor: Colors.orange),
-            SizedBox(width: 8),
+          children: [
+            const CircleAvatar(radius: 14, backgroundColor: Colors.orange),
+            const SizedBox(width: 8),
             Text(
-              "Aashwin Suresh",
-              style: TextStyle(fontSize: 16, color: Colors.white),
+              widget.post.userName,
+              style: const TextStyle(fontSize: 16, color: Colors.white),
             ),
           ],
         ),
@@ -47,7 +54,7 @@ class PostDetailPage extends StatelessWidget {
           Expanded(
             child: ListView(
               children: [
-                PostCard(isDetails: true, postId: postId ),
+                PostCard(isDetails: true, post: widget.post ),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   child: Text("Comments", style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white)),
@@ -64,6 +71,7 @@ class PostDetailPage extends StatelessWidget {
     );
     
   }
+
   Widget buildCommentThread(CommentModel comment, {double indent = 0}) {
     return Padding(
       padding: EdgeInsets.only(left: 16 + indent, right: 16, top: 8, bottom: 4),
