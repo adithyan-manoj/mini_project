@@ -6,7 +6,7 @@ class PostCard extends StatefulWidget {
   final bool isDetails;
   final PostModel post;
   
-   PostCard({super.key, this.isDetails = false, required this.post});
+  PostCard({super.key, this.isDetails = false, required this.post});
 
   @override
   State<PostCard> createState() => _PostCardState();

@@ -1,4 +1,4 @@
-import 'package:campusapp/core/commant_model.dart';
+import 'package:campusapp/core/comment_model.dart';
 import 'package:campusapp/models/post_model.dart';
 import 'package:campusapp/widgets/post_cards.dart';
 import 'package:flutter/material.dart';
