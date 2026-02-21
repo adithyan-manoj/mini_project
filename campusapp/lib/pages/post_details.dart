@@ -17,13 +17,35 @@ class _PostDetailPageState extends State<PostDetailPage> {
   Widget build(BuildContext context) {
     List<CommentModel> dummyComments = [
       CommentModel(
+        id: 'id1',
         userName: "Vinayak D",
         text: "Huge congrats, Arjun! So happy for you. ❤️",
         subComments: [
-          CommentModel(userName: "Arjun", text: "Thanks man! Appreciate it."),
+          CommentModel(id: 'id2',userName: "Arjun", text: "Thanks man! Appreciate it."),
+          CommentModel(
+            id: 'id3',
+            userName: "Arjun",
+            text: "Thanks man! Appreciate it.",
+            subComments: [
+              CommentModel(
+                id: 'id4',
+                userName: "Arjun",
+                text: "Thanks man! Appreciate it.",
+                subComments: [
+                  CommentModel(
+                    id: 'id5',
+                    userName: "Arjun",
+                    text: "Thanks man! Appreciate it.",
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
       ),
-      CommentModel(userName: "Adithyan S", text: "So proud of you buddy!"),
+      CommentModel(id: 'id11',userName: "Adithyan S", text: "So proud of you buddy!",subComments: [
+        CommentModel(id: 'id12',userName: "Arjun", text: "Thanks man! Appreciate it."),
+      ]),
     ];
     return Scaffold(
       backgroundColor: Colors.black,
@@ -54,10 +76,16 @@ class _PostDetailPageState extends State<PostDetailPage> {
           Expanded(
             child: ListView(
               children: [
-                PostCard(isDetails: true, post: widget.post ),
+                PostCard(isDetails: true, post: widget.post),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  child: Text("Comments", style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white)),
+                  child: Text(
+                    "Comments",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
                 ...dummyComments.map((c) => buildCommentThread(c)).toList(),
                 //const Divider(color: Colors.white, thickness: 0.5,)
@@ -67,9 +95,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
           _buildCommentInput(),
         ],
       ),
-      
     );
-    
   }
 
   Widget buildCommentThread(CommentModel comment, {double indent = 0}) {
@@ -87,20 +113,36 @@ class _PostDetailPageState extends State<PostDetailPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(comment.userName, style: const TextStyle(fontWeight: FontWeight.bold,color: Colors.white, fontSize: 13)),
+                    Text(
+                      comment.userName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 13,
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text(comment.text, style: const TextStyle(color: Colors.white, fontSize: 13)),
+                    Text(
+                      comment.text,
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                    ),
                     const SizedBox(height: 4),
-                    const Text("Reply", style: TextStyle(color: Colors.white54, fontSize: 11)), // Figma Reply button
+                    const Text(
+                      "Reply",
+                      style: TextStyle(color: Colors.white54, fontSize: 11),
+                    ), // Figma Reply button
                   ],
                 ),
               ),
               const Icon(Icons.more_vert, size: 16, color: Colors.white54),
             ],
           ),
+
           // If there are sub-comments, call THIS SAME function again
           if (comment.subComments.isNotEmpty)
-            ...comment.subComments.map((sub) => buildCommentThread(sub, indent: indent + 20)).toList(),
+            ...comment.subComments
+                .map((sub) => buildCommentThread(sub, indent: indent + 20))
+                .toList(),
         ],
       ),
     );
@@ -114,7 +156,10 @@ class _PostDetailPageState extends State<PostDetailPage> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
           color: Colors.black,
-          border: Border.all(width: 1,color:  Color.fromARGB(255, 152, 152, 152),), 
+          border: Border.all(
+            width: 1,
+            color: Color.fromARGB(255, 152, 152, 152),
+          ),
         ),
         child: Row(
           children: [

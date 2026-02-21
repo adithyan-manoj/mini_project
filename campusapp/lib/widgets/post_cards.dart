@@ -6,7 +6,7 @@ class PostCard extends StatefulWidget {
   final bool isDetails;
   final PostModel post;
   
-  const PostCard({super.key, this.isDetails = false, required this.post});
+   PostCard({super.key, this.isDetails = false, required this.post});
 
   @override
   State<PostCard> createState() => _PostCardState();
@@ -23,6 +23,10 @@ class _PostCardState extends State<PostCard> {
   Widget build(BuildContext context) {
     return Hero(
       tag: widget.post.id,
+  //     flightShuttleBuilder: (flightContext, animation, flightDirection, fromHeroContext, toHeroContext) {
+  //   // This keeps the "From" (Feed) version visible until the flight ends
+  //   return fromHeroContext.widget; 
+  // },
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -81,7 +85,6 @@ class _PostCardState extends State<PostCard> {
                 SizedBox(height: 2),
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                  child: Text(widget.post.content,style: TextStyle(color: Colors.white, fontSize: 15)),
                   decoration: BoxDecoration(
                     border: Border.all(
                       color: const Color.fromARGB(96, 255, 255, 255),
@@ -89,8 +92,9 @@ class _PostCardState extends State<PostCard> {
                     ),
                     borderRadius: BorderRadius.circular(10)
                   ),
+                  child: Text(widget.post.content,style: TextStyle(color: Colors.white, fontSize: 15)),
                 ),
-                SizedBox(height: 5,),
+                SizedBox(height: 9,),
                 Row(
                   children: [
                     _actionButton(
@@ -103,7 +107,7 @@ class _PostCardState extends State<PostCard> {
                       }),
                     ),
                     const SizedBox(width: 24),
-                    _actionButton(
+                    if(!widget.isDetails) _actionButton(
                       icon: Icons.comment_outlined,
                       label: "${widget.post.commentCount}",
                       color:Colors.white,

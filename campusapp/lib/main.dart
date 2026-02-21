@@ -1,3 +1,4 @@
+import 'package:campusapp/core/app_colors.dart';
 import 'package:campusapp/pages/community_page.dart';
 import 'package:campusapp/pages/login_page.dart';
 //import 'package:campusapp/pages/study_page.dart';
@@ -14,14 +15,40 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      title: 'Campus App',
+      theme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+
+        scaffoldBackgroundColor: AppColors.accentBorder,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.orange,
+          brightness: Brightness.dark,
+          surface: AppColors.cardGrey, // Global card color
+          onSurface: AppColors.textMain,
+        ),
+
+        appBarTheme: const AppBarTheme(
+          backgroundColor: AppColors.background,
+          elevation: 0,
+          //centerTitle: true,
+          iconTheme: IconThemeData(color: AppColors.textMain),
+          titleTextStyle: TextStyle(
+            color: AppColors.textMain,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: AppColors.textMain),
+          bodyMedium: TextStyle(color: AppColors.textSecondary),
+        ),
+      ),
       //home: LoginPage(),
       // home: StudyPage(),
-      home: CommunityPage()
-      
+      home:  CommunityPage(),
     );
   }
 }
-
