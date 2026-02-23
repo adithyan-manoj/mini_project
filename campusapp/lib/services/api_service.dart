@@ -6,9 +6,9 @@ class ApiService {
   //static const String baseUrl = "http://192.168.29.71:8000";
   static const String baseUrl = "http://10.207.195.152:8000";
 
-  static Future<List<EventModel>> fetchEvents({String? search, String? date}) async {
+  static Future<List<EventModel>> fetchEvents({String? search, String? date, int page = 1,int limit = 5}) async {
     // Logic: Construct a dynamic URL with query parameters
-    String urlStr = "$baseUrl/events?";
+    String urlStr = "$baseUrl/events?page=$page&limit=$limit&";
     if (search != null) urlStr += "search=$search&";
     if (date != null) urlStr += "date=$date";
 

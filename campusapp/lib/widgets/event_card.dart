@@ -34,17 +34,55 @@ class EventCard extends StatelessWidget {
                     width: 75,
                     height: 75,
                     fit: BoxFit.cover,
+                    // 1. Better Error Handling for 404s
                     errorBuilder: (context, error, stackTrace) => Container(
                       width: 75,
                       height: 75,
-                      color: Colors.white10,
-                      child: const Icon(Icons.image, color: Colors.white24),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.broken_image_outlined,
+                            color: Colors.white24,
+                            size: 24,
+                          ),
+                          Text(
+                            "404",
+                            style: TextStyle(
+                              color: Colors.white10,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    // 2. Loading Indicator while the image is downloading
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        width: 75,
+                        height: 75,
+                        color: Colors.white.withOpacity(0.05),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
               const SizedBox(width: 12),
-              
+
               // 2. Title and Description
               Expanded(
                 child: Column(
@@ -75,30 +113,44 @@ class EventCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          
+
           // 3. Footer Row: Date, Venue, and More Button
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 children: [
-                  const Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.textSecondary),
+                  const Icon(
+                    Icons.calendar_today_outlined,
+                    size: 14,
+                    color: AppColors.textSecondary,
+                  ),
                   const SizedBox(width: 5),
                   Text(
                     DateFormat('d MMM yyyy').format(event.date),
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 11,
+                    ),
                   ),
                   const SizedBox(width: 12),
-                  
-                  const Icon(Icons.location_on_outlined, size: 14, color: AppColors.textSecondary),
+
+                  const Icon(
+                    Icons.location_on_outlined,
+                    size: 14,
+                    color: AppColors.textSecondary,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     event.venue,
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 11,
+                    ),
                   ),
                 ],
               ),
-              
+
               // The "More" Button
               SizedBox(
                 height: 28,
@@ -115,9 +167,14 @@ class EventCard extends StatelessWidget {
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ),
-                  child: const Text("More", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    "More",
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],

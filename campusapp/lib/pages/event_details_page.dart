@@ -5,10 +5,10 @@ import '../core/app_colors.dart';
 
 class EventDetailsPage extends StatelessWidget {
   final EventModel event;
-  
 
   const EventDetailsPage({super.key, required this.event});
 
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(

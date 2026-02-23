@@ -74,28 +74,59 @@ async def get_all_logs():
 
 
 # Logic: We fetch all events and filter them in Python for flexibility
+# @app.get("/events")
+# async def get_events(search: str = None, date: str = None):
+#     try:
+#         events_ref = db.collection("events")
+#         docs = events_ref.stream()
+#         results = []
+
+#         for doc in docs:
+#             event = doc.to_dict()
+#             event["id"] = doc.id
+            
+#             # 1. Date Filter: Comparing the string from UI to DB
+#             if date and date != "All" and event.get("date") != date:
+#                 continue
+            
+#             # 2. Search Logic: Checking title and description
+#             if search:
+#                 s = search.lower()
+#                 if s not in event.get("title", "").lower() and s not in event.get("description", "").lower():
+#                     continue
+            
+#             results.append(event)
+#         return {"status": "success", "events": results}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/events")
-async def get_events(search: str = None, date: str = None):
+async def get_events(search: str = None, date: str = None, page: int = 1, limit: int = 5):
     try:
-        events_ref = db.collection("events")
-        docs = events_ref.stream()
+        query = db.collection("events")
+
+        if date and date != "All":
+            query = query.where("date", "==", date)
+
+        skip = (page - 1) * limit
+        docs = query.offset(skip).limit(limit).stream()
+
+        query = query.order_by("date")
+
+        docs = query.stream()
         results = []
 
         for doc in docs:
             event = doc.to_dict()
             event["id"] = doc.id
             
-            # 1. Date Filter: Comparing the string from UI to DB
-            if date and date != "All" and event.get("date") != date:
-                continue
-            
-            # 2. Search Logic: Checking title and description
             if search:
-                s = search.lower()
+                s = search.strip().lower()
                 if s not in event.get("title", "").lower() and s not in event.get("description", "").lower():
                     continue
             
             results.append(event)
+            
         return {"status": "success", "events": results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
