@@ -1,4 +1,5 @@
 import 'package:campusapp/pages/community_page.dart';
+import 'package:campusapp/pages/events_page.dart';
 import 'package:campusapp/widgets/custom_nav_bar.dart';
 import 'package:flutter/material.dart';
 
@@ -13,9 +14,7 @@ class _DashboardState extends State<Dashboard> {
   int _currentIndex = 0;
   final List<Widget> _pages = [
     const CommunityPage(),
-    const Center(
-      child: Text("Events Page", style: TextStyle(color: Colors.white)),
-    ),
+    const EventsPage(),
     const Center(
       child: Text("Lost and Found", style: TextStyle(color: Colors.white)),
     ),

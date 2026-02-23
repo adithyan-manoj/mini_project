@@ -14,28 +14,29 @@ class CustomAiamtedNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     double itemWidth = MediaQuery.of(context).size.width / 4;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: const EdgeInsets.only(bottom: 25.0),
       child: Container(
+        //padding: EdgeInsets.only(bottom: 10),
         height: 80,
         decoration: const BoxDecoration(
           color: AppColors.background,
-          //border: Border(top: BorderSide(color: AppColors.accentBorder, width: 0.5)),
+          border: Border(top: BorderSide(color: AppColors.accentBorder, width: 0.5)),
         ),
         child: Stack(
           children: [
             // 1. The Animated Background Pill
             AnimatedPositioned(
               duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOutCubic, // Professional smooth curve
-              left: itemWidth * currentIndex + (itemWidth * 0.1), // Centering logic
-              top: 10,
+              curve: Curves.easeInOutCubic,
+              left: itemWidth * currentIndex + (itemWidth * 0.2), 
+              top: 12,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
-                height: 55,
-                width: itemWidth * 0.8,
+                height: 35,
+                width: itemWidth * 0.6,
                 
                 decoration: BoxDecoration(
-                  color: Colors.white10, // Subtle highlight
+                  color: const Color.fromARGB(54, 255, 255, 255), 
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
@@ -44,7 +45,7 @@ class CustomAiamtedNavBar extends StatelessWidget {
             // 2. The Icons Row
             Row(
               children: [
-                _navItem(Icons.people_alt_outlined, 0, "Community"),
+                _navItem(Icons.groups_outlined, 0, "Community"),
                 _navItem(Icons.event_note, 1, "Events"),
                 _navItem(Icons.search, 2, "Lost & Found"),
                 _navItem(Icons.post_add_rounded, 3, "Report"),
@@ -66,7 +67,7 @@ class CustomAiamtedNavBar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AnimatedScale(
-              scale: isSelected ? 1.1 : 1.0,
+              scale: isSelected ? 1.3 : 1.2,
               duration: const Duration(milliseconds: 200),
               child: Icon(
                 icon,
@@ -77,7 +78,7 @@ class CustomAiamtedNavBar extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 14,
                 color: isSelected ? Colors.white : Colors.white54,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
