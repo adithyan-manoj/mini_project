@@ -1,9 +1,35 @@
 import 'dart:convert';
+import 'package:campusapp/models/event_model.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = "http://192.168.29.71:8000";
+  //static const String baseUrl = "http://192.168.29.71:8000";
+  static const String baseUrl = "http://10.207.195.152:8000";
 
+  static Future<List<EventModel>> fetchEvents({String? search, String? date}) async {
+    // Logic: Construct a dynamic URL with query parameters
+    String urlStr = "$baseUrl/events?";
+    if (search != null) urlStr += "search=$search&";
+    if (date != null) urlStr += "date=$date";
+
+    try {
+      final response = await http.get(Uri.parse(urlStr));
+      if (response.statusCode == 200) {
+        List data = jsonDecode(response.body)['events'];
+        return data.map((json) => EventModel(
+          id: json['id'],
+          title: json['title'],
+          description: json['description'],
+          imageUrl: json['image_url'],
+          date: DateTime.parse(json['date']), // Standard ISO format
+          venue: json['venue'],
+        )).toList();
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
   static Future<Map<String, dynamic>> login(String username, String password) async {
     final url = Uri.parse("$baseUrl/login");
 
