@@ -1,15 +1,26 @@
+import os
+from dotenv import load_dotenv
 import requests
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import firebase_admin
 from firebase_admin import credentials, firestore
 from datetime import datetime
+from supabase import create_client, Client
 
 app = FastAPI()
 
 cred = credentials.Certificate("D:\Flutter study\mini project\campus_backend\serviceAccountKey.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
+
+#supabase
+load_dotenv()
+
+supabase_url = os.getenv("supabase_url")
+supabase_key = os.getenv("supabase_key")
+
+supabase: Client = create_client(supabase_url, supabase_key)
 
 
 class EtLabCredentials(BaseModel):
@@ -69,6 +80,7 @@ async def get_all_logs():
 
         return {"status": "success", "logs": all_logs}
     except Exception as e:
+        
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -100,33 +112,75 @@ async def get_all_logs():
 #     except Exception as e:
 #         raise HTTPException(status_code=500, detail=str(e))
 
+# @app.get("/events")
+# async def get_events(search: str = None, date: str = None, page: int = 1, limit: int = 5):
+#     try:
+#         query = db.collection("events")
+
+#         if date and date != "All":
+#             query = query.where("date", "==", date)
+
+#         skip = (page - 1) * limit
+#         docs = query.offset(skip).limit(limit).stream()
+
+#         query = query.order_by("date")
+
+#         docs = query.stream()
+#         results = []
+
+#         for doc in docs:
+#             event = doc.to_dict()
+#             event["id"] = doc.id
+            
+#             if search:
+#                 s = search.strip().lower()
+#                 if s not in event.get("title", "").lower() and s not in event.get("description", "").lower():
+#                     continue
+            
+#             results.append(event)
+            
+#         return {"status": "success", "events": results}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/events")
-async def get_events(search: str = None, date: str = None, page: int = 1, limit: int = 5):
+async def get_events(search: str = None, date : str = None, page : int =1, limit: int = 5):
     try:
-        query = db.collection("events")
+        query = supabase.table("events").select("*")
 
         if date and date != "All":
-            query = query.where("date", "==", date)
+            query = query.gte("event_date", f"{date}T00:00:00")\
+                         .lt("event_date", f"{date}T23:59:59")
+        
+        start = (page-1)* limit
+        end = start + limit -1
+        query = query.range(start, end).order("event_date")
 
-        skip = (page - 1) * limit
-        docs = query.offset(skip).limit(limit).stream()
+        response = query.order("event_date", desc=False).range(start, end).execute()
+        events = response.data
 
-        query = query.order_by("date")
-
-        docs = query.stream()
-        results = []
-
-        for doc in docs:
-            event = doc.to_dict()
-            event["id"] = doc.id
-            
-            if search:
-                s = search.strip().lower()
-                if s not in event.get("title", "").lower() and s not in event.get("description", "").lower():
-                    continue
-            
-            results.append(event)
-            
-        return {"status": "success", "events": results}
+        if search:
+            s = search.strip().lower()
+            events = [
+                e for e in events
+                if s in e.get("title", "").lower() or s in e.get("description", "").lower()
+            ]
+        return {"status": "success", "event": events}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"DEBUG ERROR: {e}")
+        raise HTTPException(status_code=500,detail=str(e))
+
+# @app.get("/events")
+# async def get_events(search: str = None, date: str = None, page: int = 1, limit: int = 5):
+#     try:
+#         # 1. SIMPLEST POSSIBLE QUERY
+#         # We use .from_("events") or .table("events")
+#         response = supabase.table("events").select("*").execute()
+        
+#         print(f"RAW DATA FROM SUPABASE: {response.data}") # CHECK YOUR TERMINAL
+        
+#         return {"status": "success", "events": response.data}
+
+#     except Exception as e:
+#         print(f"STILL FAILING: {e}")
+#         raise HTTPException(status_code=500, detail=str(e))

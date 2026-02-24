@@ -329,8 +329,9 @@ class _EventsPageState extends State<EventsPage> {
           // ),
           Expanded(
             child: _allEvents.isEmpty && _isLoadingMore
-                ? const Center(
-                    child: CircularProgressIndicator(),
+                ? ListView.builder(
+                    itemCount: 5, // Show 5 ghost cards while loading
+                    itemBuilder: (context, index) => _buildShimmerCard(),
                   ) // First-time load
                 : RefreshIndicator(
                     onRefresh: () async {
@@ -433,6 +434,52 @@ class _EventsPageState extends State<EventsPage> {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShimmerCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(12),
+      height: 120, // Match your EventCard height
+      decoration: BoxDecoration(
+        color: AppColors.cardGrey,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          // Ghost Image
+          Container(
+            width: 75,
+            height: 75,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Ghost Text
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 150,
+                  height: 20,
+                  color: Colors.white.withOpacity(0.05),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: 100,
+                  height: 14,
+                  color: Colors.white.withOpacity(0.05),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

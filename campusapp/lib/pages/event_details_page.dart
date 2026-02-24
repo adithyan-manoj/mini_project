@@ -20,7 +20,7 @@ class EventDetailsPage extends StatelessWidget {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text("Events"),
+        title: const Text("Event details"),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -47,7 +47,7 @@ class EventDetailsPage extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
                   child: Image.network(
-                    event.imageUrl,
+                    event.image_url,
                     width: double.infinity,
                     height: 250,
                     fit: BoxFit.cover,
@@ -62,7 +62,7 @@ class EventDetailsPage extends StatelessWidget {
                   const Icon(Icons.calendar_today_outlined, size: 16, color: AppColors.textSecondary),
                   const SizedBox(width: 6),
                   Text(
-                    DateFormat('d MMM yyyy').format(event.date),
+                    DateFormat('d MMM yyyy').format(event.event_date),
                     style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                   ),
                   const SizedBox(width: 20),

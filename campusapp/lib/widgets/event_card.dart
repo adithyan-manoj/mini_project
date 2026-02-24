@@ -30,7 +30,7 @@ class EventCard extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.network(
-                    event.imageUrl,
+                    event.image_url,
                     width: 75,
                     height: 75,
                     fit: BoxFit.cover,
@@ -127,7 +127,7 @@ class EventCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 5),
                   Text(
-                    DateFormat('d MMM yyyy').format(event.date),
+                    DateFormat('d MMM yyyy').format(event.event_date),
                     style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 11,

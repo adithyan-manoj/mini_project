@@ -4,7 +4,8 @@ import 'package:http/http.dart' as http;
 
 class ApiService {
   //static const String baseUrl = "http://192.168.29.71:8000";
-  static const String baseUrl = "http://10.207.195.152:8000";
+  //static const String baseUrl = "http://10.207.195.152:8000";
+  static const String baseUrl = "http://192.168.1.76:8000";
 
   static Future<List<EventModel>> fetchEvents({String? search, String? date, int page = 1,int limit = 5}) async {
     // Logic: Construct a dynamic URL with query parameters
@@ -15,13 +16,13 @@ class ApiService {
     try {
       final response = await http.get(Uri.parse(urlStr));
       if (response.statusCode == 200) {
-        List data = jsonDecode(response.body)['events'];
+        List data = jsonDecode(response.body)['event'];
         return data.map((json) => EventModel(
           id: json['id'],
           title: json['title'],
           description: json['description'],
-          imageUrl: json['image_url'],
-          date: DateTime.parse(json['date']), // Standard ISO format
+          image_url: json['image_url'],
+          event_date: DateTime.parse(json['event_date']), // Standard ISO format
           venue: json['venue'],
         )).toList();
       }
