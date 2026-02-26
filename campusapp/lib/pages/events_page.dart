@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:campusapp/core/app_colors.dart';
 import 'package:campusapp/models/event_model.dart';
 import 'package:campusapp/services/api_service.dart';
@@ -56,17 +55,13 @@ class _EventsPageState extends State<EventsPage> {
 
   Future<void> _fetchNextPage() async {
     if (_isLoadingMore) return;
-
-    // Create a unique key for this specific request
     String cacheKey = "$selectedDateFilter-$searchQuery-$_currentPage";
-
-    // CHECK CACHE FIRST
     if (_paginationCache.containsKey(cacheKey)) {
       setState(() {
         _allEvents.addAll(_paginationCache[cacheKey]!);
         _currentPage++;
       });
-      return; // Stop here, no network call needed!
+      return; 
     }
 
     setState(() => _isLoadingMore = true);
@@ -103,12 +98,12 @@ class _EventsPageState extends State<EventsPage> {
   Future<List<EventModel>> getCachedEvents() async {
     String cacheKey = "$selectedDateFilter-$searchQuery";
 
-    // If we already have this exact search/date combo, return it immediately!
+    
     if (_eventCache.containsKey(cacheKey)) {
       return _eventCache[cacheKey]!;
     }
 
-    // Otherwise, fetch from network
+    
     List<EventModel> results = await ApiService.fetchEvents(
       search: searchQuery,
       date: selectedDateFilter,
@@ -122,7 +117,7 @@ class _EventsPageState extends State<EventsPage> {
   @override
   void dispose() {
     _searchController.dispose();
-    _debounce?.cancel(); // Kill the timer if the user leaves the page
+    _debounce?.cancel(); 
     super.dispose();
   }
 
@@ -341,12 +336,11 @@ class _EventsPageState extends State<EventsPage> {
                       _updateFilters(selectedDateFilter, searchQuery);
                     },
                     child: _allEvents.isEmpty
-                        ? _buildEmptyState() // Now defined below
+                        ? _buildEmptyState() 
                         : ListView.builder(
                             controller: _scrollController,
                             physics: const AlwaysScrollableScrollPhysics(),
                             padding: const EdgeInsets.only(top: 10),
-                            // Added 1 to itemCount to show the bottom loader
                             itemCount:
                                 _allEvents.length + (_isLoadingMore ? 1 : 0),
                             itemBuilder: (context, i) {

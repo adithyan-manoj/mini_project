@@ -19,6 +19,9 @@ load_dotenv()
 
 supabase_url = os.getenv("supabase_url")
 supabase_key = os.getenv("supabase_key")
+# supabase_url = "https://lynzclilcsykpakjezuv.supabase.co"
+# supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5bnpjbGlsY3N5a3Bha2plenV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjgxMzUsImV4cCI6MjA4NzUwNDEzNX0.DmjpHqrSu4WffjYCO2O-yK7sJMHonqkAC5g1Z9quQm4"
+
 
 supabase: Client = create_client(supabase_url, supabase_key)
 

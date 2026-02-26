@@ -1,5 +1,5 @@
 
-import 'package:campusapp/core/comment_model.dart';
+import 'package:campusapp/models/comment_model.dart';
 import 'package:flutter/material.dart';
 
 
