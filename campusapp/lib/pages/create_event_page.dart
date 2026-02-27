@@ -1,6 +1,9 @@
+import 'package:campusapp/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class CreateEvent extends StatefulWidget {
   const CreateEvent({super.key});
@@ -14,6 +17,16 @@ class _CreateEventState extends State<CreateEvent> {
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _venueController = TextEditingController();
   DateTime? _selectedDate;
+  File? _imageFile;
+
+  Future<void> _pickImage() async {
+    final pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+    );
+    if (pickedFile != null) {
+      setState(() => _imageFile = File(pickedFile.path));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +35,11 @@ class _CreateEventState extends State<CreateEvent> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () async {
             if (_titleController.text.isNotEmpty ||
                 _descriptionController.text.isNotEmpty) {
@@ -49,7 +66,10 @@ class _CreateEventState extends State<CreateEvent> {
             }
           },
         ),
-        title: Text('New Event', style: GoogleFonts.oswald(textStyle: TextStyle(fontSize: 28))),
+        title: Text(
+          'New Event',
+          style: GoogleFonts.oswald(textStyle: TextStyle(fontSize: 28)),
+        ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -58,15 +78,25 @@ class _CreateEventState extends State<CreateEvent> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildLabel("Title"),
-            TextField(controller: _titleController, decoration: _inputDeco("Event title")),
+            TextField(
+              controller: _titleController,
+              decoration: _inputDeco("Event title"),
+            ),
             const SizedBox(height: 20),
-            
+
             _buildLabel("Description"),
-            TextField(controller: _descriptionController, maxLines: 5, decoration: _inputDeco("")),
+            TextField(
+              controller: _descriptionController,
+              maxLines: 5,
+              decoration: _inputDeco(""),
+            ),
             const SizedBox(height: 20),
 
             _buildLabel("Venue"),
-            TextField(controller: _venueController, decoration: _inputDeco("Venue")),
+            TextField(
+              controller: _venueController,
+              decoration: _inputDeco("Venue"),
+            ),
             const SizedBox(height: 20),
 
             Row(
@@ -84,10 +114,18 @@ class _CreateEventState extends State<CreateEvent> {
                             firstDate: DateTime.now(),
                             lastDate: DateTime(2030),
                           );
-                          if (picked != null) setState(() => _selectedDate = picked);
+                          if (picked != null)
+                            setState(() => _selectedDate = picked);
                         },
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Colors.black),
-                        child: Text(_selectedDate == null ? "Date" : DateFormat('yyyy-MM-dd').format(_selectedDate!)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.black,
+                        ),
+                        child: Text(
+                          _selectedDate == null
+                              ? "Date"
+                              : DateFormat('yyyy-MM-dd').format(_selectedDate!),
+                        ),
                       ),
                     ],
                   ),
@@ -99,9 +137,14 @@ class _CreateEventState extends State<CreateEvent> {
                     children: [
                       _buildLabel("Add image"),
                       ElevatedButton(
-                        onPressed: () {}, // Image picker logic later
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Colors.black),
-                        child: const Text("Add"),
+                        onPressed: _pickImage, // Image picker logic later
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _imageFile == null
+                              ? Colors.white
+                              : Colors.green,
+                          foregroundColor: Colors.black,
+                        ),
+                        child: Text(_imageFile == null ? "Add" : "Selected ✅"),
                       ),
                     ],
                   ),
@@ -111,13 +154,60 @@ class _CreateEventState extends State<CreateEvent> {
             const SizedBox(height: 40),
             Center(
               child: ElevatedButton(
-                onPressed: () {}, // Backend logic later
+                onPressed: () async {
+                  if (_titleController.text.isEmpty ||
+                      _selectedDate == null ||
+                      _imageFile == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          "Please fill all fields and add an image",
+                        ),
+                      ),
+                    );
+                    return;
+                  }
+
+                  // Show loading indicator
+                  showDialog(
+                    context: context,
+                    builder: (context) =>
+                        const Center(child: CircularProgressIndicator()),
+                  );
+
+                  bool success = await ApiService.createEvent(
+                    title: _titleController.text,
+                    description: _descriptionController.text,
+                    venue: _venueController.text,
+                    date: _selectedDate!,
+                    imageFile: _imageFile!,
+                  );
+
+                  Navigator.pop(context); // Remove loading indicator
+
+                  if (success) {
+                    _showSuccessPopup();
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Failed to post event")),
+                    );
+                  }
+                }, 
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   minimumSize: const Size(150, 50),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
-                child: const Text("Post", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
+                child: const Text(
+                  "Post",
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
               ),
             ),
           ],
@@ -126,15 +216,58 @@ class _CreateEventState extends State<CreateEvent> {
     );
   }
 
+  void _showSuccessPopup() {
+  showDialog(
+    context: context,
+    barrierDismissible: false, // User must click "OK"
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: Colors.grey[900],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: const Icon(Icons.check_circle, color: Colors.green, size: 60),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Success!",
+              style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              "Your event has been posted to the campus app.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white70),
+            ),
+          ],
+        ),
+        actions: [
+          Center(
+            child: TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close Popup
+                Navigator.pop(context); // Go back to Events Page
+              },
+              child: const Text("OK", style: TextStyle(color: Colors.blue, fontSize: 18)),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
+
   Widget _buildLabel(String text) => Padding(
     padding: const EdgeInsets.only(bottom: 8.0),
-    child: Text(text, style: GoogleFonts.robotoFlex(
-                textStyle: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),),
+    child: Text(
+      text,
+      style: GoogleFonts.robotoFlex(
+        textStyle: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
+    ),
   );
 
   InputDecoration _inputDeco(String hint) => InputDecoration(
@@ -142,7 +275,13 @@ class _CreateEventState extends State<CreateEvent> {
     hintStyle: const TextStyle(color: Colors.white24),
     filled: false,
     fillColor: const Color(0xFF121212),
-    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white24)),
-    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white)),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: Colors.white24),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: Colors.white),
+    ),
   );
 }

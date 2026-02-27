@@ -21,6 +21,7 @@ campus_backend/serviceAccountKey.json
 /campus_frontend/.pub/
 /campus_frontend/android/app/debug/
 /campus_frontend/ios/.generated/
+campusapp\.env
 
 .idea/
 .vscode/

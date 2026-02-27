@@ -3,12 +3,22 @@ import 'package:campusapp/pages/community_page.dart';
 import 'package:campusapp/pages/create_post.dart';
 import 'package:campusapp/pages/dashboard.dart';
 import 'package:campusapp/pages/login_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 //import 'package:campusapp/pages/study_page.dart';
 import 'package:flutter/material.dart';
 //import 'package:flutter/services.dart';
 //import 'package:google_fonts/google_fonts.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await dotenv.load(fileName: ".env");
+
+  await Supabase.initialize(
+    url: dotenv.env['supabase_url'] ?? '',
+    anonKey: dotenv.env['supabase_key'] ?? '',
+  );
   runApp(const MyApp());
 }
 

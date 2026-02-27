@@ -7,9 +7,17 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 from datetime import datetime
 from supabase import create_client, Client
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # Allows all devices
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 cred = credentials.Certificate("D:\Flutter study\mini project\campus_backend\serviceAccountKey.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
@@ -24,6 +32,13 @@ supabase_key = os.getenv("supabase_key")
 
 
 supabase: Client = create_client(supabase_url, supabase_key)
+
+class EventCreate(BaseModel):  #for events
+    title: str
+    description: str
+    venue: str
+    event_date: str
+    image_url: str
 
 
 class EtLabCredentials(BaseModel):
@@ -187,3 +202,20 @@ async def get_events(search: str = None, date : str = None, page : int =1, limit
 #     except Exception as e:
 #         print(f"STILL FAILING: {e}")
 #         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/events")
+async def add_event(event: EventCreate):
+    try:
+        data = {
+            "title": event.title,
+            "description": event.description,
+            "venue": event.venue,
+            "event_date": event.event_date,
+            "image_url": event.image_url
+        }
+        # Insert into the Supabase table you created earlier
+        response = supabase.table("events").insert(data).execute()
+        return {"status": "success", "data": response.data}
+    except Exception as e:
+        print(f"Server Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
