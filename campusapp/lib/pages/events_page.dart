@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:campusapp/core/app_colors.dart';
 import 'package:campusapp/models/event_model.dart';
+import 'package:campusapp/pages/create_event_page.dart';
 import 'package:campusapp/services/api_service.dart';
 import 'package:campusapp/widgets/event_card.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class EventsPage extends StatefulWidget {
@@ -61,7 +63,7 @@ class _EventsPageState extends State<EventsPage> {
         _allEvents.addAll(_paginationCache[cacheKey]!);
         _currentPage++;
       });
-      return; 
+      return;
     }
 
     setState(() => _isLoadingMore = true);
@@ -98,12 +100,10 @@ class _EventsPageState extends State<EventsPage> {
   Future<List<EventModel>> getCachedEvents() async {
     String cacheKey = "$selectedDateFilter-$searchQuery";
 
-    
     if (_eventCache.containsKey(cacheKey)) {
       return _eventCache[cacheKey]!;
     }
 
-    
     List<EventModel> results = await ApiService.fetchEvents(
       search: searchQuery,
       date: selectedDateFilter,
@@ -117,7 +117,7 @@ class _EventsPageState extends State<EventsPage> {
   @override
   void dispose() {
     _searchController.dispose();
-    _debounce?.cancel(); 
+    _debounce?.cancel();
     super.dispose();
   }
 
@@ -127,12 +127,13 @@ class _EventsPageState extends State<EventsPage> {
   );
   @override
   Widget build(BuildContext context) {
+    bool hasAuth = true;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Events',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28),
+          style: GoogleFonts.oswald(textStyle: TextStyle(fontSize: 28)),
         ),
         leading: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
         centerTitle: true,
@@ -336,7 +337,7 @@ class _EventsPageState extends State<EventsPage> {
                       _updateFilters(selectedDateFilter, searchQuery);
                     },
                     child: _allEvents.isEmpty
-                        ? _buildEmptyState() 
+                        ? _buildEmptyState()
                         : ListView.builder(
                             controller: _scrollController,
                             physics: const AlwaysScrollableScrollPhysics(),
@@ -358,6 +359,36 @@ class _EventsPageState extends State<EventsPage> {
                   ),
           ),
         ],
+      ),
+
+      // floatingActionButton: hasAuth? FloatingActionButton(
+      //   onPressed: () {
+      //     Navigator.of(
+      //       context,
+      //     ).push(MaterialPageRoute(builder: (context) => CreateEvent()));
+      //   },
+      //   heroTag: "events_fab_tag",
+      //   child: Row(
+      //     children: [
+      //       Text("Create new"),
+      //       Icon(Icons.add),
+
+      //     ],
+      //   ),
+      // ) : null,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (context) => CreateEvent()));
+        },
+        
+        heroTag: "events_fab_tag",
+        icon: Icon(Icons.my_library_add_sharp, color: Colors.black,),
+        label: Text('Create new', style: TextStyle(
+          color: Colors.black
+        ),),
+        backgroundColor: Colors.white,
       ),
     );
   }

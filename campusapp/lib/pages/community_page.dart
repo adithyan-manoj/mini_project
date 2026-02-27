@@ -2,6 +2,7 @@ import 'package:campusapp/models/post_model.dart';
 import 'package:campusapp/pages/create_post.dart';
 import 'package:campusapp/widgets/post_cards.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class CommunityPage extends StatefulWidget {
   const CommunityPage({super.key});
@@ -42,9 +43,9 @@ class _CommunityPageState extends State<CommunityPage> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Campus App',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          style: GoogleFonts.oswald(textStyle: TextStyle(fontSize: 28)),
         ),
         backgroundColor: const Color.fromARGB(255, 0, 0, 0),
         actions: [
