@@ -1,5 +1,6 @@
 import 'package:campusapp/core/app_colors.dart';
 import 'package:campusapp/pages/community_page.dart';
+import 'package:campusapp/pages/create_post.dart';
 import 'package:campusapp/pages/dashboard.dart';
 import 'package:campusapp/pages/login_page.dart';
 //import 'package:campusapp/pages/study_page.dart';
@@ -50,6 +51,7 @@ class MyApp extends StatelessWidget {
       //home: LoginPage(),
       // home: StudyPage(),
       home:  Dashboard(),
+      //home: CreatePost(),
     );
   }
 }

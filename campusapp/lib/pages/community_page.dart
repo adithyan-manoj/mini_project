@@ -1,4 +1,5 @@
 import 'package:campusapp/models/post_model.dart';
+import 'package:campusapp/pages/create_post.dart';
 import 'package:campusapp/widgets/post_cards.dart';
 import 'package:flutter/material.dart';
 
@@ -60,6 +61,14 @@ class _CommunityPageState extends State<CommunityPage> {
         itemBuilder: (context, index) {
           return PostCard(post: posts[index]);
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          //Navigator.push(context, MaterialPageRoute(builder: (context) => CreatePost(),));
+          Navigator.of(context).push(MaterialPageRoute(builder: (context) => CreatePost(),));
+        },
+        backgroundColor: Colors.white,
+        child: const Icon(Icons.add, color: Colors.black),
       ),
     );
   }
