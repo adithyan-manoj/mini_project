@@ -8,8 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 
 class ApiService {
-  static const String baseUrl = "http://192.168.29.143:8000";
-  //static const String baseUrl = "http://10.207.195.152:8000";
+  static const String baseUrl = "http://192.168.29.143:8000";  //static const String baseUrl = "http://10.207.195.152:8000";
   //static const String baseUrl = "http://192.168.1.76:8000";
 
   static final supabase = Supabase.instance.client;
@@ -37,7 +36,58 @@ class ApiService {
       return [];
     }
   }
-  static Future<Map<String, dynamic>> login(String username, String password) async {
+  // static Future<Map<String, dynamic>> login(String username, String password) async {
+  //   final url = Uri.parse("$baseUrl/login");
+
+  //   try {
+  //     final response = await http.post(
+  //       url,
+  //       headers: {"Content-Type": "application/json"},
+  //       body: jsonEncode({"username": username, "password": password}),
+  //     ).timeout(const Duration(seconds: 10));
+
+  //     return {
+  //       "statusCode": response.statusCode,
+  //       "body": jsonDecode(response.body),
+  //     };
+  //   } catch (e) {
+  //     return {
+  //       "statusCode": 500, 
+  //       "body": {"detail": "ETLAB proxy error: Check your wifi or server"}
+  //     };
+  //   }
+  // }
+
+  // static Future<Map<String, dynamic>> login(String username, String password) async {
+  //   final url = Uri.parse("$baseUrl/login");
+
+  //   try {
+  //     final response = await http.post(
+  //       url,
+  //       headers: {"Content-Type": "application/json"},
+  //       body: jsonEncode({"username": username, "password": password}),
+  //     ).timeout(const Duration(seconds: 30)); // Increased timeout for scraping
+  //     print("DEBUG: Raw Backend Response: ${response.body}");
+
+  //     final responseData = jsonDecode(response.body);
+
+  //     if (response.statusCode == 200) {
+  //       // Inject the session into Supabase
+  //       await supabase.auth.setSession(responseData['session']['access_token']);
+  //       return {"statusCode": 200, "body": responseData};
+  //     }
+
+  //     return {"statusCode": response.statusCode, "body": responseData};
+
+  //   } catch (e) {
+  //     print("Login Error: $e");
+  //     return {
+  //       "statusCode": 500, 
+  //       "body": {"detail": "Connection error: Check your server or network"}
+  //     };
+  //   }
+  // }
+static Future<Map<String, dynamic>> login(String username, String password) async {
     final url = Uri.parse("$baseUrl/login");
 
     try {
@@ -45,19 +95,39 @@ class ApiService {
         url,
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"username": username, "password": password}),
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 30));
 
-      return {
-        "statusCode": response.statusCode,
-        "body": jsonDecode(response.body),
-      };
+      print("DEBUG Status: ${response.statusCode}");
+      print("DEBUG Body: ${response.body}");
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        final sessionData = responseData['session'];
+        
+        // --- PHASE 1: CORRECT SESSION INJECTION ---
+        // We provide the access token AND the refresh token to satisfy Supabase
+        await supabase.auth.setSession(sessionData['refresh_token']); 
+        
+        /* Note: In the latest flutter_supabase, passing the refresh token 
+           is enough for it to recover the full session.
+        */
+
+        print("SUCCESS: Logged in as ${supabase.auth.currentUser?.id}");
+        return {"statusCode": 200, "body": responseData};
+      }
+
+      return {"statusCode": response.statusCode, "body": responseData};
+      
     } catch (e) {
+      print("Flutter Login Error: $e");
       return {
         "statusCode": 500, 
-        "body": {"detail": "ETLAB proxy error: Check your wifi or server"}
+        "body": {"detail": "Connection error: ${e.toString()}"}
       };
     }
   }
+
 
   static Future<List<dynamic>> fetchLogs() async {
   final url = Uri.parse("$baseUrl/admin/logs");

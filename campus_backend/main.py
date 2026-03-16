@@ -33,11 +33,12 @@ app.add_middleware(
 
 # supabase_url = os.getenv("supabase_url")
 # supabase_key = os.getenv("supabase_key")
+supabase_service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 supabase_url = "https://lynzclilcsykpakjezuv.supabase.co"
 supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5bnpjbGlsY3N5a3Bha2plenV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjgxMzUsImV4cCI6MjA4NzUwNDEzNX0.DmjpHqrSu4WffjYCO2O-yK7sJMHonqkAC5g1Z9quQm4"
 
 
-supabase: Client = create_client(supabase_url, supabase_key)
+supabase: Client = create_client(supabase_url, supabase_service_key)
 
 class EventCreate(BaseModel):  #for events
     title: str
@@ -53,38 +54,106 @@ class EtLabCredentials(BaseModel):
 
 ETLAB_URL = "https://sctce.etlab.in/user/login"
 
-# @app.post("/login")
-# async def login_to_etlab(data: EtLabCredentials):
-#     session = requests.Session()
-
-#     payload = {
-#         "LoginForm[username]": data.username,
-#         "LoginForm[password]": data.password,
-#         "yt0": "Login" 
-#     }
-
-#     try:
-#         # 3. The Robot tries to log in
-#         response = session.post(ETLAB_URL, data=payload, timeout=10)
-
-#         # 4. Check if we got in
-#         # Usually, if login is successful, the URL changes to /dashboard or /home
-#         if response.status_code == 200 and "Dashboard" in response.text:
-#             login_ref = db.collection("login_logs").document()
-#             login_ref.set(
-#                 {
-#                     "student_id": data.username,
-#                     "login_time": datetime.now(),
-#                     "status": "success"
-#                 }
-#             )
-#             return {"status": "success", "message": "Authenticated with ETLAB"}
-#         else:
-#             raise HTTPException(status_code=401, detail="Invalid ETLAB credentials")
-
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail="ETLAB Server is down")
+@app.post("/login")
+async def login_to_etlab(data: EtLabCredentials):
+    session = requests.Session()
+    payload = {
+        "LoginForm[username]": data.username,
+        "LoginForm[password]": data.password,
+        "yt0": "Login" 
+    }
     
+    try:
+        # 1. Verify with ETLAB
+        response = session.post(ETLAB_URL, data=payload, timeout=10)
+
+        if response.status_code == 200 and "Dashboard" in response.text:
+            # Fix: Splitting logic for the name
+            full_name = f"User {data.username}" 
+            if "Welcome," in response.text:
+                try:
+                    # Fix: Correctly indexing the split list before splitting again
+                    full_name = response.text.split("Welcome,").split("!").strip()
+                except (IndexError, AttributeError):
+                    pass
+
+            user_email = f"{data.username}@sctce.edu"
+            auth_res = None
+
+            try:
+                # 2. Try to Sign In (if user already exists)
+                auth_res = supabase.auth.sign_in_with_password({
+                    "email": user_email, 
+                    "password": data.password
+                })
+            except Exception:
+                # 3. Create New User if Sign In fails
+                try:
+                    # Admin create doesn't return a session, just the user
+                    supabase.auth.admin.create_user({
+                        "email": user_email,
+                        "password": data.password,
+                        "user_metadata": {"full_name": full_name},
+                        "email_confirm": True
+                    })
+                    # MUST sign in after creation to get the Session object for Flutter
+                    auth_res = supabase.auth.sign_in_with_password({
+                        "email": user_email, 
+                        "password": data.password
+                    })
+                except Exception as create_err:
+                    # 4. Fallback: Password mismatch on existing account
+                    users_list = supabase.auth.admin.list_users()
+                    target_user = next((u for u in users_list if u.email == user_email), None)
+                    
+                    if target_user:
+                        supabase.auth.admin.update_user_by_id(
+                            target_user.id, 
+                            attributes={'password': data.password}
+                        )
+                        auth_res = supabase.auth.sign_in_with_password({
+                            "email": user_email, 
+                            "password": data.password
+                        })
+                    else:
+                        raise create_err
+
+            user_id = auth_res.user.id
+
+            # 5. Sync to systematic 'users' table
+            supabase.table("users").upsert({
+                "id": user_id,
+                "etlab_id": data.username,
+                "full_name": full_name,
+                "department": "Pending", 
+            }).execute()
+
+            # Return the session object which Flutter's ApiService expects
+            clean_session = {
+                "access_token": auth_res.session.access_token,
+                "refresh_token": auth_res.session.refresh_token,
+                "expires_at": auth_res.session.expires_at
+            }
+            
+            return {
+                "status": "success",
+                "message": "Authenticated with ETLAB and Supabase",
+                "session": clean_session,
+                "user": {
+                    "id": user_id,
+                    "name": full_name
+                }
+            }
+            
+        else:
+            raise HTTPException(status_code=401, detail="Invalid ETLAB credentials")
+
+    except Exception as e:
+        print(f"Login Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    
+
 # @app.get("/admin/logs")
 # async def get_all_logs():
 #     try:

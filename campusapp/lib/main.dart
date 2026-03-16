@@ -1,5 +1,7 @@
 import 'package:campusapp/core/app_colors.dart';
 import 'package:campusapp/pages/dashboard.dart';
+import 'package:campusapp/pages/login_page.dart';
+import 'package:campusapp/pages/splashScreen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 //import 'package:campusapp/pages/study_page.dart';
@@ -24,25 +26,26 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 1. Check for an existing session on the phone
+    // Supabase stores this automatically after your successful login.
+    //final session = Supabase.instance.client.auth.currentSession;
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Campus App',
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
-
         scaffoldBackgroundColor: AppColors.accentBorder,
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.orange,
           brightness: Brightness.dark,
-          surface: AppColors.cardGrey, // Global card color
+          surface: AppColors.cardGrey,
           onSurface: AppColors.textMain,
         ),
-
         appBarTheme: const AppBarTheme(
           backgroundColor: AppColors.background,
           elevation: 0,
-          //centerTitle: true,
           iconTheme: IconThemeData(color: AppColors.textMain),
           titleTextStyle: TextStyle(
             color: AppColors.textMain,
@@ -55,10 +58,9 @@ class MyApp extends StatelessWidget {
           bodyMedium: TextStyle(color: AppColors.textSecondary),
         ),
       ),
-      //home: LoginPage(),
-      // home: StudyPage(),
-      home:  Dashboard(),
-      //home: CreatePost(),
+      // 2. Dynamic Home Selection
+      // If session is NOT null, jump straight to Dashboard.
+      home: SplashScreen(),
     );
   }
 }

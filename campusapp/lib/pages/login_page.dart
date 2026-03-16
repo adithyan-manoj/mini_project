@@ -1,4 +1,5 @@
 //import 'dart:io';
+import 'package:campusapp/pages/dashboard.dart';
 import 'package:campusapp/pages/home_dashboard.dart';
 import 'package:campusapp/services/api_service.dart';
 import 'package:campusapp/widgets/custom_button.dart';
@@ -22,12 +23,12 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordcontroller = TextEditingController();
 
   void handleLogin() async {
-    String email = _emailcontroller.text.trim();
+    String username = _emailcontroller.text.trim();
     String password = _passwordcontroller.text.trim();
     print('Email: ${_emailcontroller.text}');
     print('Password: ${_passwordcontroller.text}');
 
-    if (email.isEmpty || password.isEmpty) {
+    if (username.isEmpty || password.isEmpty) {
       _showErrorSnackBar('Fields cannot be empty!');
       return;
     }
@@ -46,21 +47,34 @@ class _LoginPageState extends State<LoginPage> {
       _isLoggingIn = true;
     });
 
-    final result = await ApiService.login(email, password);
+    final result = await ApiService.login(username, password);
 
     setState(() {
       _isLoggingIn = false;
     });
 
-    if (result['statusCode'] == 200) {
-      print("Success: ${result['body']['message']}");
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
-      );
-    } else {
-      String error = result['body']['detail'] ?? "Login failed";
-      _showErrorSnackBar(error);
+    try {
+      if (result['statusCode'] == 200) {
+        if (mounted) {
+          print("Success: ${result['body']['message']}");
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => Dashboard()),
+        );
+        }
+        
+      } else {
+        String error = result['body']['detail'] ?? "Login failed";
+        _showErrorSnackBar(error);
+      }
+    } catch(e) {
+      _showErrorSnackBar("Connection Failed");
+    } finally {
+      if(mounted) {
+        setState(() {
+          _isLoggingIn = false;
+        });
+      }
     }
   }
 
