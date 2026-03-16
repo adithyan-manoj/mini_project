@@ -1,3 +1,4 @@
+import 'package:campusapp/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -11,6 +12,53 @@ class CreatePost extends StatefulWidget {
 class _CreatePostState extends State<CreatePost> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitPost() async {
+    final title = _titleController.text.trim();
+    final content = _descriptionController.text.trim();
+
+    if (title.isEmpty || content.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Title and description cannot be empty.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final success = await ApiService.createPost(title: title, content: content);
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Post published!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pop(context, true); // return true → community page will refresh
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to publish post. Please try again.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +100,7 @@ class _CreatePostState extends State<CreatePost> {
         ),
         title: Text(
           'New Post',
-          style: GoogleFonts.oswald(textStyle: TextStyle(fontSize: 28)),
+          style: GoogleFonts.oswald(textStyle: const TextStyle(fontSize: 28)),
         ),
         centerTitle: true,
         elevation: 0,
@@ -65,7 +113,7 @@ class _CreatePostState extends State<CreatePost> {
             Text(
               "Title",
               style: GoogleFonts.robotoFlex(
-                textStyle: TextStyle(
+                textStyle: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -82,7 +130,7 @@ class _CreatePostState extends State<CreatePost> {
             Text(
               "Description",
               style: GoogleFonts.robotoFlex(
-                textStyle: TextStyle(
+                textStyle: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -94,7 +142,7 @@ class _CreatePostState extends State<CreatePost> {
               controller: _descriptionController,
               maxLines: 6,
               style: const TextStyle(color: Colors.white),
-              decoration: _inputDecoration(""),
+              decoration: _inputDecoration("What's on your mind?"),
             ),
             const SizedBox(height: 40),
             Center(
@@ -102,20 +150,29 @@ class _CreatePostState extends State<CreatePost> {
                 width: 150,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Logic to send to FastAPI goes here
-                  },
+                  onPressed: _isLoading ? null : _submitPost,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.black,
+                    disabledBackgroundColor: Colors.white38,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text(
-                    "Post",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.black,
+                          ),
+                        )
+                      : const Text(
+                          "Post",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 18),
+                        ),
                 ),
               ),
             ),
@@ -129,8 +186,6 @@ class _CreatePostState extends State<CreatePost> {
     return InputDecoration(
       hintText: hint,
       hintStyle: const TextStyle(color: Colors.white24),
-      //filled: true,
-      //fillColor: Colors.grey[900],
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: Colors.white24),

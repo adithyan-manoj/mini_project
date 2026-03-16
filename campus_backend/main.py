@@ -3,13 +3,15 @@ from dotenv import load_dotenv
 import requests
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import firebase_admin
-from firebase_admin import credentials, firestore
 from datetime import datetime
 from supabase import create_client, Client
 from fastapi.middleware.cors import CORSMiddleware
+from community import router as community_router
 
 app = FastAPI()
+
+# ── Include routers ────────────────────────────────────────────────────────────
+app.include_router(community_router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -18,17 +20,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-cred = credentials.Certificate("D:\Flutter study\mini project\campus_backend\serviceAccountKey.json")
-firebase_admin.initialize_app(cred)
-db = firestore.client()
+# # cred = credentials.Certificate("D:\Flutter study\mini project\campus_backend\serviceAccountKey.json")
+# # firebase_admin.initialize_app(cred)
+# db = firestore.client()
+
+
+
+
 
 #supabase
-load_dotenv()
+# load_dotenv()
 
-supabase_url = os.getenv("supabase_url")
-supabase_key = os.getenv("supabase_key")
-# supabase_url = "https://lynzclilcsykpakjezuv.supabase.co"
-# supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5bnpjbGlsY3N5a3Bha2plenV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjgxMzUsImV4cCI6MjA4NzUwNDEzNX0.DmjpHqrSu4WffjYCO2O-yK7sJMHonqkAC5g1Z9quQm4"
+# supabase_url = os.getenv("supabase_url")
+# supabase_key = os.getenv("supabase_key")
+supabase_url = "https://lynzclilcsykpakjezuv.supabase.co"
+supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5bnpjbGlsY3N5a3Bha2plenV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjgxMzUsImV4cCI6MjA4NzUwNDEzNX0.DmjpHqrSu4WffjYCO2O-yK7sJMHonqkAC5g1Z9quQm4"
 
 
 supabase: Client = create_client(supabase_url, supabase_key)
@@ -47,59 +53,59 @@ class EtLabCredentials(BaseModel):
 
 ETLAB_URL = "https://sctce.etlab.in/user/login"
 
-@app.post("/login")
-async def login_to_etlab(data: EtLabCredentials):
-    session = requests.Session()
+# @app.post("/login")
+# async def login_to_etlab(data: EtLabCredentials):
+#     session = requests.Session()
 
-    payload = {
-        "LoginForm[username]": data.username,
-        "LoginForm[password]": data.password,
-        "yt0": "Login" 
-    }
+#     payload = {
+#         "LoginForm[username]": data.username,
+#         "LoginForm[password]": data.password,
+#         "yt0": "Login" 
+#     }
 
-    try:
-        # 3. The Robot tries to log in
-        response = session.post(ETLAB_URL, data=payload, timeout=10)
+#     try:
+#         # 3. The Robot tries to log in
+#         response = session.post(ETLAB_URL, data=payload, timeout=10)
 
-        # 4. Check if we got in
-        # Usually, if login is successful, the URL changes to /dashboard or /home
-        if response.status_code == 200 and "Dashboard" in response.text:
-            login_ref = db.collection("login_logs").document()
-            login_ref.set(
-                {
-                    "student_id": data.username,
-                    "login_time": datetime.now(),
-                    "status": "success"
-                }
-            )
-            return {"status": "success", "message": "Authenticated with ETLAB"}
-        else:
-            raise HTTPException(status_code=401, detail="Invalid ETLAB credentials")
+#         # 4. Check if we got in
+#         # Usually, if login is successful, the URL changes to /dashboard or /home
+#         if response.status_code == 200 and "Dashboard" in response.text:
+#             login_ref = db.collection("login_logs").document()
+#             login_ref.set(
+#                 {
+#                     "student_id": data.username,
+#                     "login_time": datetime.now(),
+#                     "status": "success"
+#                 }
+#             )
+#             return {"status": "success", "message": "Authenticated with ETLAB"}
+#         else:
+#             raise HTTPException(status_code=401, detail="Invalid ETLAB credentials")
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="ETLAB Server is down")
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail="ETLAB Server is down")
     
-@app.get("/admin/logs")
-async def get_all_logs():
-    try:
-        logs_ref = db.collection("login_logs")
+# @app.get("/admin/logs")
+# async def get_all_logs():
+#     try:
+#         logs_ref = db.collection("login_logs")
 
-        docs = logs_ref.stream()
+#         docs = logs_ref.stream()
 
-        all_logs = []
+#         all_logs = []
 
-        for doc in docs:
-            log_data = doc.to_dict()
+#         for doc in docs:
+#             log_data = doc.to_dict()
 
-            if "login_time" in log_data:
-                log_data["login_time"] = log_data["login_time"].strftime("%Y-%m-%d %H:%M:%S")
+#             if "login_time" in log_data:
+#                 log_data["login_time"] = log_data["login_time"].strftime("%Y-%m-%d %H:%M:%S")
             
-            all_logs.append(log_data)
+#             all_logs.append(log_data)
 
-        return {"status": "success", "logs": all_logs}
-    except Exception as e:
+#         return {"status": "success", "logs": all_logs}
+#     except Exception as e:
         
-        raise HTTPException(status_code=500, detail=str(e))
+#         raise HTTPException(status_code=500, detail=str(e))
 
 
 

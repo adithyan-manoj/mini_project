@@ -1,5 +1,6 @@
 import 'package:campusapp/models/post_model.dart';
 import 'package:campusapp/pages/post_details.dart';
+import 'package:campusapp/services/api_service.dart';
 import 'package:flutter/material.dart';
 
 class PostCard extends StatefulWidget {
@@ -95,10 +96,28 @@ class _PostCardState extends State<PostCard> {
                     icon: widget.post.isLikedByMe ? Icons.thumb_up : Icons.thumb_up_outlined,
                     label: "${widget.post.likes}",
                     color: widget.post.isLikedByMe ? Colors.blue : Colors.white,
-                    onTap: () => setState(() {
-                      widget.post.isLikedByMe = !widget.post.isLikedByMe;
-                      widget.post.isLikedByMe ? widget.post.likes++ : widget.post.likes--;
-                    }),
+                    onTap: () async {
+                      final newLikeState = !widget.post.isLikedByMe;
+                      // Optimistic UI update
+                      setState(() {
+                        widget.post.isLikedByMe = newLikeState;
+                        widget.post.isLikedByMe ? widget.post.likes++ : widget.post.likes--;
+                      });
+                      
+                      // API Call
+                      final updatedLikes = await ApiService.toggleLike(widget.post.id, newLikeState);
+                      if (updatedLikes != null) {
+                        setState(() {
+                          widget.post.likes = updatedLikes;
+                        });
+                      } else {
+                        // Revert on failure
+                        setState(() {
+                          widget.post.isLikedByMe = !newLikeState;
+                          !newLikeState ? widget.post.likes++ : widget.post.likes--;
+                        });
+                      }
+                    },
                   ),
                   const SizedBox(width: 24),
                   if(!widget.isDetails) _actionButton(

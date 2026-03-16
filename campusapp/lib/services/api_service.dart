@@ -1,12 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:campusapp/models/comment_model.dart';
 import 'package:campusapp/models/event_model.dart';
+import 'package:campusapp/models/post_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 
 class ApiService {
-  static const String baseUrl = "http://10.21.181.152:8000";
+  static const String baseUrl = "http://192.168.29.143:8000";
   //static const String baseUrl = "http://10.207.195.152:8000";
   //static const String baseUrl = "http://192.168.1.76:8000";
 
@@ -109,5 +111,136 @@ static Future<bool> createEvent({
   }
 }
 
-}
+  // ─── Community Posts (via FastAPI backend) ────────────────────────────────
 
+  /// Fetches all community posts from the FastAPI backend.
+  static Future<List<PostModel>> fetchPosts() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/community/posts'));
+      if (response.statusCode == 200) {
+        final List posts = jsonDecode(response.body)['posts'];
+        return posts.map((row) {
+          final authorId = row['author_id'] as String? ?? 'anonymous';
+          return PostModel(
+            id: row['id'] as String,
+            userName: 'Campus User',
+            userProfilePic:
+                'https://api.dicebear.com/7.x/avataaars/png?seed=$authorId',
+            postedTime: DateTime.parse(row['created_at'] as String),
+            title: row['title'] as String? ?? '',
+            content: row['content'] as String? ?? '',
+            likes: (row['likes_count'] as int?) ?? 0,
+          );
+        }).toList();
+      }
+      return [];
+    } catch (e) {
+      print('fetchPosts error: $e');
+      return [];
+    }
+  }
+
+  /// Sends a new post to the FastAPI backend which saves it to Supabase.
+  /// Returns true on success, false on failure.
+  static Future<bool> createPost({
+    required String title,
+    required String content,
+  }) async {
+    try {
+      final userId = supabase.auth.currentUser?.id;
+      final body = <String, dynamic>{
+        'title': title,
+        'content': content,
+        if (userId != null) 'author_id': userId,
+      };
+      final response = await http.post(
+        Uri.parse('$baseUrl/community/posts'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print('createPost error: $e');
+      return false;
+    }
+  }
+
+  // ─── Comments (via FastAPI backend) ───────────────────────────────────────
+
+  /// Fetches all comments for a post and assembles them into a tree.
+  static Future<List<CommentModel>> fetchComments(String postId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/community/posts/$postId/comments'),
+      );
+      if (response.statusCode == 200) {
+        final List raw = jsonDecode(response.body)['comments'];
+        final flat = raw.map<CommentModel>((row) {
+          final authorId = row['author_id'] as String? ?? 'anonymous';
+          return CommentModel(
+            id: row['id'] as String,
+            postId: row['post_id'] as String,
+            parentId: row['parent_comment_id'] as String?,
+            authorId: authorId,
+            userName: 'Campus User',
+            profilePic:
+                'https://api.dicebear.com/7.x/avataaars/png?seed=$authorId',
+            text: row['content'] as String? ?? '',
+            createdAt: DateTime.parse(row['created_at'] as String),
+          );
+        }).toList();
+        return CommentModel.buildTree(flat);
+      }
+      return [];
+    } catch (e) {
+      print('fetchComments error: $e');
+      return [];
+    }
+  }
+
+  /// Posts a new comment (or reply) to the FastAPI backend.
+  /// [parentCommentId] is null for top-level comments, a UUID for replies.
+  static Future<bool> createComment({
+    required String postId,
+    required String content,
+    String? parentCommentId,
+  }) async {
+    try {
+      final userId = supabase.auth.currentUser?.id;
+      final body = <String, dynamic>{
+        'content': content,
+        if (userId != null) 'author_id': userId,
+        if (parentCommentId != null) 'parent_comment_id': parentCommentId,
+      };
+      final response = await http.post(
+        Uri.parse('$baseUrl/community/posts/$postId/comments'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print('createComment error: $e');
+      return false;
+    }
+  }
+
+  // ─── Likes (via FastAPI backend) ───────────────────────────────────────
+
+  /// Toggles the like status of a post.
+  static Future<int?> toggleLike(String postId, bool isLiking) async {
+    try {
+      final endpoint = isLiking ? 'like' : 'unlike';
+      final response = await http.post(
+        Uri.parse('$baseUrl/community/posts/$postId/$endpoint'),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body)['likes_count'] as int?;
+      }
+      return null;
+    } catch (e) {
+      print('toggleLike error: $e');
+      return null;
+    }
+  }
+
+}
