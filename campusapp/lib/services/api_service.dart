@@ -7,9 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ApiService {
-  static const String baseUrl =
-      "http://192.168.1.37:8000"; //static const String baseUrl = "http://10.207.195.152:8000";
-  //static const String baseUrl = "http://192.168.1.76:8000";
+  static const String baseUrl ="http://10.141.4.152:8000";
 
   static final supabase = Supabase.instance.client;
 
@@ -398,4 +396,25 @@ class ApiService {
   }
 
 
+
+  static Future<Map<String, dynamic>?> fetchUserProfile(String userId) async {
+    try {
+      final response = await http.get(Uri.parse("$baseUrl/user/profile/$userId"));
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body)['user'];
+      }
+      return null;
+    } catch (e) {
+      print("Fetch Profile Error: $e");
+      return null;
+    }
+  }
+
+  static Future<void> logout() async {
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      print("Logout Error: $e");
+    }
+  }
 }

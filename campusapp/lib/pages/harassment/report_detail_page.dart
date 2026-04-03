@@ -79,6 +79,7 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
     final statusColor = _getStatusColor(report.status);
 
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text('Report Details'),
         centerTitle: true,

@@ -6,6 +6,7 @@ import 'package:campusapp/widgets/custom_button.dart';
 import 'package:campusapp/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -118,12 +119,15 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 children: [
                   const SizedBox(height: 80),
-                  const Text(
-                    'APP NAME',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 45,
+                  Text(
+                    'Campus app',
+                    style: GoogleFonts.oswald(
+                      textStyle: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 45,
+                        letterSpacing: 2.0,
+                      ),
                     ),
                   ),
 
@@ -136,11 +140,13 @@ class _LoginPageState extends State<LoginPage> {
                         children: [
                           Text(
                             isActive ? 'Welcome Back' : 'Signup now',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 35,
-                              letterSpacing: 1.5,
+                            style: GoogleFonts.robotoFlex(
+                              textStyle: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 35,
+                                letterSpacing: 1.2,
+                              ),
                             ),
                           ),
                         ],
@@ -153,11 +159,13 @@ class _LoginPageState extends State<LoginPage> {
                       padding: const EdgeInsets.only(left: 20.0),
                       child: Text(
                         'Jump back in and continue right where you left off.',
-                        style: TextStyle(
-                          color: Color.fromARGB(255, 255, 159, 80),
-                          fontWeight: FontWeight.normal,
-                          fontSize: 17,
-                          letterSpacing: 1.5,
+                        style: GoogleFonts.robotoFlex(
+                          textStyle: const TextStyle(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.normal,
+                            fontSize: 15,
+                            letterSpacing: 1.2,
+                          ),
                         ),
                       ),
                     ),
@@ -235,14 +243,16 @@ class _LoginPageState extends State<LoginPage> {
                                         child: Center(
                                           child: Text(
                                             "Login",
-                                            style: TextStyle(
-                                              fontSize: 23,
-                                              fontWeight: isActive
-                                                  ? FontWeight.bold
-                                                  : FontWeight.normal,
-                                              color: isActive
-                                                  ? Colors.black
-                                                  : Colors.grey[600],
+                                            style: GoogleFonts.robotoFlex(
+                                              textStyle: TextStyle(
+                                                fontSize: 20,
+                                                fontWeight: isActive
+                                                    ? FontWeight.bold
+                                                    : FontWeight.normal,
+                                                color: isActive
+                                                    ? Colors.black
+                                                    : Colors.grey[600],
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -259,14 +269,16 @@ class _LoginPageState extends State<LoginPage> {
                                         child: Center(
                                           child: Text(
                                             "Signup",
-                                            style: TextStyle(
-                                              fontSize: 23,
-                                              fontWeight: !isActive
-                                                  ? FontWeight.bold
-                                                  : FontWeight.normal,
-                                              color: !isActive
-                                                  ? Colors.black
-                                                  : Colors.grey[600],
+                                            style: GoogleFonts.robotoFlex(
+                                              textStyle: TextStyle(
+                                                fontSize: 20,
+                                                fontWeight: !isActive
+                                                    ? FontWeight.bold
+                                                    : FontWeight.normal,
+                                                color: !isActive
+                                                    ? Colors.black
+                                                    : Colors.grey[600],
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -281,9 +293,9 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       SizedBox(height: 20),
                       CustomTextField(
-                        icon: Icons.mail_outline_rounded,
+                        icon: Icons.badge_outlined,
                         isPassword: false,
-                        label: 'Email Address',
+                        label: 'ETLAB ID',
                         textController: _emailcontroller,
                       ),
 

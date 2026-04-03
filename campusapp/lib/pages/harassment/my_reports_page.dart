@@ -3,6 +3,7 @@ import 'package:campusapp/models/harassment_report.dart';
 import 'package:campusapp/services/harassment_service.dart';
 import 'package:campusapp/pages/harassment/report_detail_page.dart';
 import 'package:campusapp/pages/harassment/report_form_page.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class MyReportsPage extends StatefulWidget {
   const MyReportsPage({super.key});
@@ -50,7 +51,7 @@ class _MyReportsPageState extends State<MyReportsPage> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('My Reports'),
+        title: Text('My Reports', style: GoogleFonts.oswald(textStyle: TextStyle(fontSize: 28)),),
         centerTitle: true,
       ),
       body: FutureBuilder<List<HarassmentReport>>(
@@ -88,7 +89,7 @@ class _MyReportsPageState extends State<MyReportsPage> {
                   contentPadding: const EdgeInsets.all(16),
                   title: Text(
                     report.title,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                   subtitle: Padding(
                     padding: const EdgeInsets.only(top: 8.0),
@@ -153,6 +154,7 @@ class _MyReportsPageState extends State<MyReportsPage> {
             _loadReports();
           }
         },
+        heroTag: "harasment_page_tag",
         icon: const Icon(Icons.add,color: Colors.black,),
         label: const Text('New Report', style: TextStyle(
           color: Colors.black

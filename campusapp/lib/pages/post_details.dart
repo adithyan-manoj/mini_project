@@ -288,7 +288,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                       ? 'Reply to @$_replyingToName...'
                       : 'Add a comment...',
                   border: InputBorder.none,
-                  hintStyle: const TextStyle(color: Colors.white38),
+                  hintStyle: const TextStyle(color: Colors.white60),
                 ),
                 onSubmitted: (_) => _submitComment(),
               ),

@@ -139,8 +139,8 @@ class _BackupLostFoundListPageState extends State<BackupLostFoundListPage>
               style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 hintText: 'Search items by name...',
-                hintStyle: TextStyle(color: Colors.white54),
-                prefixIcon: const Icon(Icons.search, color: Colors.white54),
+                hintStyle: const TextStyle(color: Colors.white60),
+                prefixIcon: const Icon(Icons.search, color: Colors.white60),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: Colors.white30),

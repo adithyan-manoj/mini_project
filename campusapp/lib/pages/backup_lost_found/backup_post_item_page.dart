@@ -4,6 +4,7 @@ import 'package:campusapp/services/backup_api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class BackupPostItemPage extends StatefulWidget {
   const BackupPostItemPage({super.key});
@@ -88,6 +89,43 @@ class _BackupPostItemPageState extends State<BackupPostItemPage> {
     }
   }
 
+  Widget _buildLabel(String text) => Padding(
+    padding: const EdgeInsets.only(bottom: 8.0, top: 4.0),
+    child: Text(
+      text,
+      style: GoogleFonts.robotoFlex(
+        textStyle: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
+    ),
+  );
+
+  InputDecoration _inputDeco(String hint) => InputDecoration(
+    hintText: hint,
+    hintStyle: const TextStyle(color: Colors.white54),
+    filled: false,
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: Colors.white24),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: Colors.white),
+    ),
+    errorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: Colors.redAccent),
+    ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+    ),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+  );
+
   Widget _buildTextField(
       String label, 
       String hint, 
@@ -96,28 +134,11 @@ class _BackupPostItemPageState extends State<BackupPostItemPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 8),
+        _buildLabel(label),
         TextFormField(
           style: const TextStyle(color: Colors.white),
           keyboardType: kbType,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(color: Colors.grey[600]),
-            filled: true,
-            fillColor: const Color.fromARGB(255, 30, 30, 30),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-          ),
+          decoration: _inputDeco(hint),
           validator: (val) => val!.trim().isEmpty ? 'Required' : null,
           onSaved: onSaved,
         ),
@@ -131,9 +152,20 @@ class _BackupPostItemPageState extends State<BackupPostItemPage> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Report Item', style: TextStyle(color: Colors.white)),
-        backgroundColor: AppColors.background,
-        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: Colors.black,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'Report Item',
+          style: GoogleFonts.oswald(textStyle: const TextStyle(fontSize: 28, color: Colors.white)),
+        ),
+        centerTitle: true,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -144,15 +176,8 @@ class _BackupPostItemPageState extends State<BackupPostItemPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
-                      'What are you reporting?',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
+                    _buildLabel('What are you reporting?'),
+                    const SizedBox(height: 4),
                     SegmentedButton<String>(
                       segments: const [
                         ButtonSegment(
@@ -209,24 +234,17 @@ class _BackupPostItemPageState extends State<BackupPostItemPage> {
                       kbType: TextInputType.phone,
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      'Attachment (Optional)',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
+                    _buildLabel('Attachment (Optional)'),
+                    const SizedBox(height: 4),
                     GestureDetector(
                       onTap: _pickImage,
                       child: Container(
                         height: 150,
                         width: double.infinity,
                         decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 30, 30, 30),
+                          color: Colors.transparent,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.white30),
+                          border: Border.all(color: Colors.white24),
                         ),
                         child: _selectedImage != null
                             ? ClipRRect(
@@ -252,16 +270,18 @@ class _BackupPostItemPageState extends State<BackupPostItemPage> {
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        foregroundColor: Colors.black,
+                        minimumSize: const Size(double.infinity, 50),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                         ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                       onPressed: _submit,
                       child: const Text(
                         'Submit Report',
                         style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.black),
                       ),

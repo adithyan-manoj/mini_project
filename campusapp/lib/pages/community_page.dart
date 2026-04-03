@@ -1,5 +1,6 @@
 import 'package:campusapp/models/post_model.dart';
 import 'package:campusapp/pages/create_post.dart';
+import 'package:campusapp/pages/profile_page.dart';
 import 'package:campusapp/services/api_service.dart';
 import 'package:campusapp/widgets/post_cards.dart';
 import 'package:flutter/material.dart';
@@ -48,7 +49,21 @@ class _CommunityPageState extends State<CommunityPage> {
             onPressed: () {},
             icon: const Icon(Icons.search, color: Colors.white),
           ),
-          const CircleAvatar(radius: 18, backgroundColor: Colors.white),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfilePage()),
+              );
+            },
+            child: CircleAvatar(
+              radius: 18,
+              backgroundColor: Colors.white10,
+              backgroundImage: NetworkImage(
+                'https://api.dicebear.com/7.x/avataaars/png?seed=${ApiService.supabase.auth.currentUser?.id ?? "anon"}',
+              ),
+            ),
+          ),
           const SizedBox(width: 15),
         ],
       ),

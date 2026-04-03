@@ -185,7 +185,7 @@ class _CreatePostState extends State<CreatePost> {
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Colors.white24),
+      hintStyle: const TextStyle(color: Colors.white54),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: Colors.white24),

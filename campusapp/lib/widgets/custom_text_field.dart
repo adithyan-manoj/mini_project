@@ -37,6 +37,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           border: Border.all(color: const Color.fromARGB(255, 212, 212, 212)),
         ),
         child: TextFormField(
+          style: const TextStyle(color: Colors.black),
           controller: widget.textController,
           obscureText: _obscureText,
           // validator: (value) {

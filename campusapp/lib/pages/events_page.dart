@@ -159,6 +159,7 @@ class _EventsPageState extends State<EventsPage> {
               },
               decoration: InputDecoration(
                 hintText: "Search Events",
+                hintStyle: const TextStyle(color: Colors.white54),
                 prefixIcon: const Icon(Icons.search, color: Colors.white54),
                 suffixIcon: searchQuery.isNotEmpty
                     ? IconButton(

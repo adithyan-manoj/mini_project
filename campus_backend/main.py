@@ -192,6 +192,23 @@ async def login_to_etlab(data: EtLabCredentials):
         print(f"Login Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
     
+@app.get("/user/profile/{user_id}")
+async def get_user_profile(user_id: str):
+    try:
+        # Query the systematic 'users' table
+        response = supabase1.table("users").select("*").eq("id", user_id).execute()
+        
+        if not response.data:
+            raise HTTPException(status_code=404, detail="User not found")
+            
+        return {
+            "status": "success", 
+            "user": response.data[0]
+        }
+    except Exception as e:
+        print(f"Profile Fetch Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
     
 
 # @app.get("/admin/logs")

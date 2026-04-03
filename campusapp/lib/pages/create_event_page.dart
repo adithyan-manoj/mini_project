@@ -272,7 +272,7 @@ class _CreateEventState extends State<CreateEvent> {
 
   InputDecoration _inputDeco(String hint) => InputDecoration(
     hintText: hint,
-    hintStyle: const TextStyle(color: Colors.white24),
+    hintStyle: const TextStyle(color: Colors.white54),
     filled: false,
     fillColor: const Color(0xFF121212),
     enabledBorder: OutlineInputBorder(
