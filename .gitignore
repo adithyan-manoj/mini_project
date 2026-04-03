@@ -12,7 +12,7 @@ campus_backend\.env
 
 
 campus_backend/serviceAccountKey.json
-campus_backend\service-account.json
+campus_backend/service-account.json
 
 /campus_frontend/build/
 /campus_frontend/.dart_tool/
