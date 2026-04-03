@@ -190,6 +190,7 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
+  // ignore: unused_element
   Widget _interactionButton(IconData icon, String label) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14, vertical: 5),

@@ -127,6 +127,7 @@ class _EventsPageState extends State<EventsPage> {
   );
   @override
   Widget build(BuildContext context) {
+    // ignore: unused_local_variable
     bool hasAuth = true;
     return Scaffold(
       backgroundColor: AppColors.background,

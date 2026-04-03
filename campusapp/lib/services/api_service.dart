@@ -8,7 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ApiService {
   static const String baseUrl =
-      "http://192.168.29.143:8000"; //static const String baseUrl = "http://10.207.195.152:8000";
+      "http://10.59.78.152:8000"; //static const String baseUrl = "http://10.207.195.152:8000";
   //static const String baseUrl = "http://192.168.1.76:8000";
 
   static final supabase = Supabase.instance.client;
