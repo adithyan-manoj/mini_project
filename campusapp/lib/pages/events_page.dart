@@ -12,10 +12,10 @@ class EventsPage extends StatefulWidget {
   const EventsPage({super.key});
 
   @override
-  State<EventsPage> createState() => _EventsPageState();
+  State<EventsPage> createState() => EventsPageState();
 }
 
-class _EventsPageState extends State<EventsPage> {
+class EventsPageState extends State<EventsPage> {
   DateTime selectedDate = DateTime.now();
   String searchQuery = "";
   String selectedDateFilter = "All";
@@ -45,12 +45,13 @@ class _EventsPageState extends State<EventsPage> {
     }
   }
 
-  void _updateFilters(String newDate, String newSearch) {
+  void updateFilters(String newDate, String newSearch) {
     setState(() {
       selectedDateFilter = newDate;
       searchQuery = newSearch;
       _currentPage = 1;
       _allEvents.clear();
+      _paginationCache.clear();
     });
     _fetchNextPage();
   }
@@ -153,7 +154,7 @@ class _EventsPageState extends State<EventsPage> {
                 // });
                 _debounce = Timer(const Duration(milliseconds: 500), () {
                   // This handles the trim and the server request
-                  _updateFilters(selectedDateFilter, val.trim());
+                  updateFilters(selectedDateFilter, val.trim());
                 });
                 setState(() {
                   searchQuery = val;
@@ -193,7 +194,7 @@ class _EventsPageState extends State<EventsPage> {
               itemBuilder: (context, index) {
                 if (index == 0) {
                   return GestureDetector(
-                    onTap: () => _updateFilters("All", searchQuery),
+                    onTap: () => updateFilters("All", searchQuery),
                     child: _buildDateTile(
                       "ALL",
                       "",
@@ -218,7 +219,7 @@ class _EventsPageState extends State<EventsPage> {
 
                 return GestureDetector(
                   // CHANGE: Use _updateFilters so it clears the list and resets to Page 1
-                  onTap: () => _updateFilters(formattedDate, searchQuery),
+                  onTap: () => updateFilters(formattedDate, searchQuery),
                   child: _buildDateTile(
                     DateFormat('MMM').format(date).toUpperCase(),
                     date.day.toString(),
@@ -337,7 +338,7 @@ class _EventsPageState extends State<EventsPage> {
                       setState(() {
                         _paginationCache.clear(); // Wipe the cache
                       });
-                      _updateFilters(selectedDateFilter, searchQuery);
+                      updateFilters(selectedDateFilter, searchQuery);
                     },
                     child: _allEvents.isEmpty
                         ? _buildEmptyState()
@@ -379,26 +380,6 @@ class _EventsPageState extends State<EventsPage> {
       //     ],
       //   ),
       // ) : null,
-      floatingActionButton: (ApiService.currentUserRole == 'admin' ||
-              ApiService.currentUserRole == 'club_rep')
-          ? FloatingActionButton.extended(
-              onPressed: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (context) => CreateEvent()));
-              },
-              heroTag: "events_fab_tag",
-              icon: Icon(
-                Icons.my_library_add_sharp,
-                color: Colors.black,
-              ),
-              label: Text(
-                'Create new',
-                style: TextStyle(color: Colors.black),
-              ),
-              backgroundColor: Colors.white,
-            )
-          : null,
     );
   }
 
@@ -422,7 +403,7 @@ class _EventsPageState extends State<EventsPage> {
               TextButton(
                 onPressed: () {
                   _searchController.clear();
-                  _updateFilters("All", "");
+                  updateFilters("All", "");
                 },
                 child: const Text(
                   "Clear all filters",

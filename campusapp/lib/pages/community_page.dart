@@ -10,10 +10,10 @@ class CommunityPage extends StatefulWidget {
   const CommunityPage({super.key});
 
   @override
-  State<CommunityPage> createState() => _CommunityPageState();
+  State<CommunityPage> createState() => CommunityPageState();
 }
 
-class _CommunityPageState extends State<CommunityPage> {
+class CommunityPageState extends State<CommunityPage> {
   List<PostModel> _posts = [];
   bool _isLoading = true;
   Map<String, dynamic>? _userProfile;
@@ -21,7 +21,7 @@ class _CommunityPageState extends State<CommunityPage> {
   @override
   void initState() {
     super.initState();
-    _loadPosts();
+    loadPosts();
     _loadUserProfile();
   }
 
@@ -35,7 +35,7 @@ class _CommunityPageState extends State<CommunityPage> {
     }
   }
 
-  Future<void> _loadPosts() async {
+  Future<void> loadPosts() async {
     setState(() => _isLoading = true);
     final posts = await ApiService.fetchPosts();
     if (mounted) {
@@ -91,7 +91,7 @@ class _CommunityPageState extends State<CommunityPage> {
                   ),
                 )
               : RefreshIndicator(
-                  onRefresh: _loadPosts,
+                  onRefresh: loadPosts,
                   color: Colors.white,
                   backgroundColor: Colors.grey[900],
                   child: ListView.builder(
@@ -101,19 +101,6 @@ class _CommunityPageState extends State<CommunityPage> {
                     },
                   ),
                 ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          // Wait for CreatePost to return; if it returns true, refresh the feed
-          final result = await Navigator.of(context).push<bool>(
-            MaterialPageRoute(builder: (context) => const CreatePost()),
-          );
-          if (result == true) {
-            _loadPosts();
-          }
-        },
-        backgroundColor: Colors.white,
-        child: const Icon(Icons.add, color: Colors.black),
-      ),
     );
   }
 }

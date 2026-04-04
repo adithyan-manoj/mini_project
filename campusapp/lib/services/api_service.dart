@@ -3,11 +3,12 @@ import 'dart:io';
 import 'package:campusapp/models/comment_model.dart';
 import 'package:campusapp/models/event_model.dart';
 import 'package:campusapp/models/post_model.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ApiService {
-  static const String baseUrl ="http://10.141.4.152:8000";
+  static String get baseUrl => dotenv.env['backend_url'] ?? "http://10.141.4.152:8000";
 
   static final supabase = Supabase.instance.client;
   static String? currentUserRole; // Store role globally for UI checks
@@ -42,6 +43,29 @@ class ApiService {
       return [];
     } catch (e) {
       return [];
+    }
+  }
+
+  static Future<EventModel?> fetchEventById(String id) async {
+    try {
+      final response = await http.get(Uri.parse("$baseUrl/events"));
+      if (response.statusCode == 200) {
+        List data = jsonDecode(response.body)['event'];
+        final json = data.firstWhere((e) => e['id'].toString() == id, orElse: () => null);
+        if (json != null) {
+          return EventModel(
+            id: json['id'].toString(),
+            title: json['title'],
+            description: json['description'],
+            image_url: json['image_url'],
+            event_date: DateTime.parse(json['event_date']),
+            venue: json['venue'],
+          );
+        }
+      }
+      return null;
+    } catch (e) {
+      return null;
     }
   }
   // static Future<Map<String, dynamic>> login(String username, String password) async {
@@ -229,6 +253,15 @@ class ApiService {
     }
   }
 
+  static Future<PostModel?> fetchPostById(String id) async {
+    try {
+      final posts = await fetchPosts(); // Reusing the existing list fetch for simplicity
+      return posts.firstWhere((p) => p.id == id);
+    } catch (e) {
+      return null;
+    }
+  }
+
   /// Sends a new post to the FastAPI backend which saves it to Supabase.
   /// Returns true on success, false on failure.
   static Future<bool> createPost({
@@ -411,18 +444,20 @@ class ApiService {
 
   static Future<Map<String, dynamic>?> fetchUserProfile(String userId) async {
     try {
-      final response = await http.get(Uri.parse("$baseUrl/user/profile/$userId"));
+      final response = await http
+          .get(Uri.parse("$baseUrl/user/profile/$userId"))
+          .timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final profile = jsonDecode(response.body)['user'];
         final rawRole = profile['role'] ?? 'student';
-        currentUserRole = rawRole.toString().toLowerCase(); // Auto-set role in lowercase
-
+        currentUserRole = rawRole.toString().toLowerCase();
         print("DEBUG FRONTEND FETCH ROLE: Current user role synced: $rawRole -> $currentUserRole");
         return profile;
       }
       return null;
     } catch (e) {
-      print("Fetch Profile Error: $e");
+      print("Fetch Profile Error (using default role 'student'): $e");
+      currentUserRole ??= 'student'; // fallback so app doesn't get stuck
       return null;
     }
   }

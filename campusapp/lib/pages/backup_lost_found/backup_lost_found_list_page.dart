@@ -12,10 +12,10 @@ class BackupLostFoundListPage extends StatefulWidget {
 
   @override
   State<BackupLostFoundListPage> createState() =>
-      _BackupLostFoundListPageState();
+      BackupLostFoundListPageState();
 }
 
-class _BackupLostFoundListPageState extends State<BackupLostFoundListPage>
+class BackupLostFoundListPageState extends State<BackupLostFoundListPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<BackupLostFoundItem> _items = [];
@@ -30,10 +30,10 @@ class _BackupLostFoundListPageState extends State<BackupLostFoundListPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _loadItems();
+    loadItems();
   }
 
-  Future<void> _loadItems() async {
+  Future<void> loadItems() async {
     setState(() => _isLoading = true);
     try {
       final rawData = await BackupApiService.getBackupItems(
@@ -67,7 +67,7 @@ class _BackupLostFoundListPageState extends State<BackupLostFoundListPage>
       _currentType = 'all';
       _currentStatus = 'closed';
     }
-    _loadItems();
+    loadItems();
   }
 
   Widget _buildFilterRow() {
@@ -88,7 +88,7 @@ class _BackupLostFoundListPageState extends State<BackupLostFoundListPage>
             onChanged: (String? newValue) {
               if (newValue != null) {
                 setState(() => _currentSortBy = newValue);
-                _loadItems();
+                loadItems();
               }
             },
             items: const [
@@ -151,7 +151,7 @@ class _BackupLostFoundListPageState extends State<BackupLostFoundListPage>
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
               ),
-              onSubmitted: (_) => _loadItems(),
+              onSubmitted: (_) => loadItems(),
             ),
           ),
           _buildFilterRow(),
@@ -180,28 +180,13 @@ class _BackupLostFoundListPageState extends State<BackupLostFoundListPage>
                                   ),
                                 ),
                               );
-                              _loadItems(); // refresh after popping
+                              loadItems(); // refresh after popping
                             },
                           );
                         },
                       ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const BackupPostItemPage(),
-            ),
-          );
-          _loadItems();
-        },
-        heroTag: "backup_lost_found_fab_tag",
-        label: const Text('Report Item', style: TextStyle(color: Colors.black)),
-        icon: const Icon(Icons.add, color: Colors.black),
-        backgroundColor: Colors.white,
       ),
     );
   }

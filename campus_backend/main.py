@@ -13,6 +13,8 @@ from backup_lost_found import router as backup_lost_found_router
 import firebase_admin
 from firebase_admin import credentials, messaging
 from typing import Optional, List
+from groq import Groq
+from ai_utils import upsert_document, search_documents
 
 app = FastAPI()
 
@@ -95,6 +97,10 @@ class LostFoundItem(BaseModel):
 
 class StatusUpdate(BaseModel):
     status: str
+
+class ChatRequest(BaseModel):
+    query: str
+    user_id: Optional[str] = None
 
 # ── Authentication ─────────────────────────────────────────────────────────────
 
@@ -376,6 +382,20 @@ async def add_event(event: EventCreate):
         except Exception as fcm_err:
             print(f"⚠️ FCM Broadcast Error: {fcm_err}")
 
+        # 3. 🧠 AI Real-time Ingestion (RAG)
+        try:
+            event_id = response.data[0]['id']
+            content = f"Event: {event.title}. Description: {event.description}. Venue: {event.venue}. Date: {event.event_date}."
+            metadata = {
+                "type": "event",
+                "id": str(event_id),
+                "title": event.title,
+                "path": "/events" # Deep link path
+            }
+            upsert_document(content, metadata)
+        except Exception as ai_err:
+            print(f"⚠️ AI Ingestion Warning: {ai_err}")
+
         return {"status": "success", "data": response.data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -427,3 +447,74 @@ async def update_item_status(item_id: str, data: StatusUpdate):
         return {"status": "success", "data": response.data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+class ChatRequest(BaseModel):
+    query: str
+    user_id: Optional[str] = None
+
+#      AI Chat Bot                                                                                                                               
+
+@app.post("/ai/chat")
+async def ai_chat(request: ChatRequest):
+    """AI Chatbot with RAG (Retrieval-Augmented Generation) and Deep Linking."""
+    try:
+        # 1. Search for relevant context in the Knowledge Base
+        context_chunks = search_documents(request.query)
+        context_text = "\n".join([c['content'] for c in context_chunks])
+        
+        # 2. Extract links/metadata from the context for reference
+        # This helps the AI know which IDs correspond to which items
+        source_links = []
+        for c in context_chunks:
+            meta = c.get('metadata', {})
+            source_links.append({
+                "id": meta.get("id"),
+                "type": meta.get("type"),
+                "title": meta.get("title")
+            })
+
+        # 3. Setup Groq Model
+        client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+        
+        system_prompt = f"""
+        You are the Campus Assistant for 'Campus App'. You help students with college events, community posts, and campus info.
+        Use the following context to answer the user's question accurately. Be friendly and direct.
+        
+        CONTEXT:
+        {context_text}
+        
+        METADATA (Use these IDs for deep linking):
+        {source_links}
+
+        RULES:
+        1. Be helpful and professional.
+        2. IF you mention a specific event or post from the context, you MUST include its ID, title, and type in the 'links' list.
+        3. ALWAYS return a valid JSON object.
+        4. YOU MUST RESPOND ONLY IN JSON FORMAT.
+        5. The JSON format must be:
+        {{
+            "answer": "Your detailed response here...",
+            "links": [{{ "type": "event/post", "id": "uuid", "title": "name" }}]
+        }}
+        """
+
+        response = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": request.query}
+            ],
+            model="llama-3.3-70b-versatile",
+            response_format={"type": "json_object"}
+        )
+
+        import json
+        ai_response = json.loads(response.choices[0].message.content)
+        
+        return {
+            "status": "success",
+            "answer": ai_response.get("answer"),
+            "links": ai_response.get("links", [])
+        }
+
+    except Exception as e:
+        print(f"R AI Chat Error: {e}")
+        raise HTTPException(status_code=500, detail=f"AI Assistant unavailable: {str(e)}")

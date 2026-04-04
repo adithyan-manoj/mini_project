@@ -13,6 +13,7 @@ campus_backend\.env
 campus_backend/serviceAccountKey.json
 campus_backend/serviceaccount.json
 campus_backend/service-account.json
+campusapp/errors.txt
 
 /campus_frontend/build/
 /campus_frontend/.dart_tool/

@@ -4,6 +4,7 @@ from typing import Optional, Dict, Any, List
 import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
+from ai_utils import upsert_document
 
 load_dotenv()
 
@@ -62,6 +63,21 @@ async def create_post(post: PostCreate):
             payload["author_id"] = post.author_id
 
         response = supabase.table("posts").insert(payload).execute()
+
+        # 🧠 AI Real-time Ingestion (RAG)
+        try:
+            post_id = response.data[0]['id']
+            content = f"Post Title: {post.title}. Content: {post.content}."
+            metadata = {
+                "type": "post",
+                "id": str(post_id),
+                "title": post.title,
+                "path": "/community" # Deep link path
+            }
+            upsert_document(content, metadata)
+        except Exception as ai_err:
+            print(f"⚠️ AI Ingestion Warning: {ai_err}")
+
         return {"status": "success", "data": response.data}
     except Exception as e:
         print(f"create_post error: {e}")

@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class BackupApiService {
-  static const String baseUrl = "http://10.141.4.152:8000";
+  static String get baseUrl => dotenv.env['backend_url'] ?? "http://10.141.4.152:8000";
 
   // ─── Backup Lost & Found (via FastAPI backend) ────────────────────────
 
