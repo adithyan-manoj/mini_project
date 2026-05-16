@@ -5,11 +5,12 @@ import 'package:campusapp/models/event_model.dart';
 import 'package:campusapp/models/post_model.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:campusapp/core/api_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:campusapp/services/cache_service.dart';
 
 class ApiService {
-  static String get baseUrl => dotenv.env['backend_url'] ?? "http://10.141.4.152:8000";
+  static String get baseUrl => ApiConfig.baseUrl;
 
   static final supabase = Supabase.instance.client;
   static String? currentUserRole; // Store role globally for UI checks

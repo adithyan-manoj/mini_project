@@ -3,9 +3,14 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AiApiService {
-  static final String baseUrl = dotenv.env['backend_url'] ?? 'http://10.141.4.152:8000';
+  static final String baseUrl =
+      dotenv.env['backend_url'] ?? 'http://192.168.1.71:8000';
 
-  static Future<Map<String, dynamic>> sendChatQuery(String query, {String? userId, List<Map<String, dynamic>> history = const []}) async {
+  static Future<Map<String, dynamic>> sendChatQuery(
+    String query, {
+    String? userId,
+    List<Map<String, dynamic>> history = const [],
+  }) async {
     final url = Uri.parse('$baseUrl/ai/chat');
 
     try {
