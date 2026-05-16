@@ -8,17 +8,17 @@ from ai_utils import upsert_document
 
 load_dotenv()
 
-# ── Supabase client ───────────────────────────────────────────────────────────
+# --- Supabase client ---
 supabase_url = os.getenv("supabase_url")
 supabase_key = os.getenv("supabase_key")
 
 supabase: Client = create_client(supabase_url, supabase_key)
 
-# ── Router ────────────────────────────────────────────────────────────────────
+# --- Router ---
 router = APIRouter(prefix="/community", tags=["Community"])
 
 
-# ── Pydantic models ───────────────────────────────────────────────────────────
+# --- Pydantic models ---
 class PostCreate(BaseModel):
     title: str
     content: str
@@ -64,7 +64,7 @@ async def create_post(post: PostCreate):
 
         response = supabase.table("posts").insert(payload).execute()
 
-        # 🧠 AI Real-time Ingestion (RAG)
+        # AI Real-time Ingestion (RAG)
         try:
             post_id = response.data[0]['id']
             content = f"Post Title: {post.title}. Content: {post.content}."
@@ -76,7 +76,7 @@ async def create_post(post: PostCreate):
             }
             upsert_document(content, metadata)
         except Exception as ai_err:
-            print(f"⚠️ AI Ingestion Warning: {ai_err}")
+            print(f"WARNING: AI Ingestion Warning: {ai_err}")
 
         return {"status": "success", "data": response.data}
     except Exception as e:

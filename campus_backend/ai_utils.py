@@ -11,9 +11,29 @@ load_dotenv()
 
 # Configure Local Embeddings (Fast, Offline, Reliable)
 # Using all-MiniLM-L6-v2 (80MB) for low memory usage.
-print("🧠 Loading Local AI Model... (Starts in <5 seconds)")
-model = SentenceTransformer('all-MiniLM-L6-v2') 
-print("✅ Local AI Model Ready.")
+print("DEBUG: Loading AI Model...", flush=True)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Check if model exists locally in the project folder
+local_model_path = os.path.join(BASE_DIR, "models", "all-MiniLM-L6-v2")
+
+try:
+    if os.path.exists(local_model_path):
+        print(f"DEBUG: Loading model from local cache: {local_model_path}", flush=True)
+        # We also pass local_files_only=True to ensure it doesn't try to connect to HF Hub
+        model = SentenceTransformer(local_model_path, local_files_only=True)
+    else:
+        print("DEBUG: Local model not found. Attempting to download from Hugging Face...", flush=True)
+        model = SentenceTransformer('all-MiniLM-L6-v2')
+        # Save it for future offline use
+        os.makedirs(os.path.dirname(local_model_path), exist_ok=True)
+        model.save(local_model_path)
+        print(f"DEBUG: Model downloaded and saved to: {local_model_path}", flush=True)
+    print("DEBUG: AI Model Ready.", flush=True)
+except Exception as e:
+    import traceback
+    print(f"ERROR: Could not load the AI model: {e}", flush=True)
+    traceback.print_exc()
+    model = None
 
 # Configure Supabase
 supabase_url = os.getenv("supabase_url")
@@ -33,7 +53,7 @@ def get_embedding(text: str):
         
         return padded_embedding.tolist()
     except Exception as e:
-        print(f"❌ Local Embedding Error: {e}")
+        print(f"ERROR: Local Embedding Error: {e}")
         return None
 
 def upsert_document(content: str, metadata: dict):
@@ -49,15 +69,15 @@ def upsert_document(content: str, metadata: dict):
             "embedding": embedding
         }
         res = supabase.table("documents").insert(data).execute()
-        print(f"✅ Document Pushed: {metadata.get('type')} - {metadata.get('id')}")
+        print(f"SUCCESS: Document Pushed: {metadata.get('type')} - {metadata.get('id')}")
         return res
     except Exception as e:
-        print(f"❌ Upsert Error: {e}")
+        print(f"ERROR: Upsert Error: {e}")
         return None
 
 def search_documents(query_text: str, limit: int = 5):
     """Searches the database using Groq-enhanced keyword extraction for 100% accuracy."""
-    print(f"🧠 AI Search: Analyzing query '{query_text}'...")
+    print(f"DEBUG: AI Search: Analyzing query '{query_text}'...")
     
     # 1. Use Groq to extract the 'meat' of the question (Keywords)
     client = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -81,12 +101,12 @@ def search_documents(query_text: str, limit: int = 5):
         
         # If no results, try secondary word extraction
         if not res.data:
-            print(f"⚠️ No exact match for '{keyword}'. Trying second keyword...")
+            print(f"WARNING: No exact match for '{keyword}'. Trying second keyword...")
             secondary_word = query_text.split()[-1]
             res = supabase.table("documents").select("*").ilike("content", f"%{secondary_word}%").limit(limit).execute()
             
-        print(f"✅ Found {len(res.data)} matching documents.")
+        print(f"SUCCESS: Found {len(res.data)} matching documents.")
         return res.data
     except Exception as e:
-        print(f"❌ Search Error: {e}")
+        print(f"ERROR: Search Error: {e}")
         return []

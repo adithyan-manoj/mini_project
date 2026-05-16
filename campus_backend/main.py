@@ -25,23 +25,23 @@ app.include_router(backup_lost_found_router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allows all devices
+    allow_origins=["*"], # Allows all devicese
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ── Firebase Initialization ──────────────────────────────────────────────────
+# --- Firebase Initialization ---
 try:
     cred_path = os.path.join(os.path.dirname(__file__), "serviceaccount.json")
     if os.path.exists(cred_path):
         cred = credentials.Certificate(cred_path)
         firebase_admin.initialize_app(cred)
-        print("✅ SUCCESS: Firebase Admin SDK initialized.")
+        print("SUCCESS: Firebase Admin SDK initialized.")
     else:
-        print("⚠️ WARNING: service-account.json NOT FOUND. Push notifications will fail.")
+        print("WARNING: service-account.json NOT FOUND. Push notifications will fail.")
 except Exception as e:
-    print(f"❌ Firebase Init Error: {e}")
+    print(f"Firebase Init Error: {e}")
 
 #supabase
 load_dotenv()
@@ -51,9 +51,9 @@ supabase_key = os.getenv("supabase_key") or "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ
 supabase_service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("supabase_service_key")
 
 if not supabase_service_key or supabase_service_key == supabase_key:
-    print("⚠️ WARNING: SUPABASE_SERVICE_ROLE_KEY is missing or invalid! Admin features like creating users will FAIL.")
+    print("WARNING: SUPABASE_SERVICE_ROLE_KEY is missing or invalid! Admin features like creating users will FAIL.")
 else:
-    print("✅ SUCCESS: Supabase Service Role Key loaded.")
+    print("SUCCESS: Supabase Service Role Key loaded.")
 
 supabase1: Client = create_client(supabase_url, supabase_service_key)
 
@@ -105,175 +105,224 @@ ETLAB_URL = "https://sctce.etlab.in/user/login"
 
 @app.post("/login")
 async def login_to_etlab(data: EtLabCredentials):
-    # --- DUAL-MODE LOGIN: Check for Email vs ETLAB ID ---
-    if "@" in data.username:
-        try:
-            auth_res = supabase1.auth.sign_in_with_password({
-                "email": data.username,
-                "password": data.password
-            })
-            user_id = auth_res.user.id
-            user_profile = supabase1.table("users").select("*").eq("id", user_id).single().execute()
-            
-            clean_session = {
-                "access_token": auth_res.session.access_token,
-                "refresh_token": auth_res.session.refresh_token,
-                "expires_at": auth_res.session.expires_at
-            }
-            
-            return {
-                "status": "success",
-                "message": "Authenticated with Supabase",
-                "session": clean_session,
-                "user": user_profile.data
-            }
-        except Exception as e:
-            print(f"Internal Login Error: {e}")
-            raise HTTPException(status_code=401, detail="Invalid Email or Password")
-
-    # --- ETLAB LOGIN (Students) ---
-    session = requests.Session()
-    payload = {
-        "LoginForm[username]": data.username,
-        "LoginForm[password]": data.password,
-        "yt0": "Login" 
-    }
-    
     try:
-        response = session.post(ETLAB_URL, data=payload, timeout=15)
-
-        if response.status_code == 200 and "Dashboard" in response.text:
+        print(f"DEBUG: Starting login process for: {data.username}")
+        if "@" in data.username:
             try:
-                from bs4 import BeautifulSoup
-                import re
+                auth_res = supabase1.auth.sign_in_with_password({
+                    "email": data.username,
+                    "password": data.password
+                })
+                user_id = auth_res.user.id
+                user_profile = supabase1.table("users").select("*").eq("id", user_id).single().execute()
                 
-                profile_res = session.get("https://sctce.etlab.in/student/profile", timeout=10)
-                soup = BeautifulSoup(profile_res.text, 'html.parser')
+                clean_session = {
+                    "access_token": auth_res.session.access_token,
+                    "refresh_token": auth_res.session.refresh_token,
+                    "expires_at": auth_res.session.expires_at
+                }
                 
-                # Fetch student profile data
-                full_name = f"User {data.username}"
-                name_th = soup.find('th', string=re.compile(r'Name', re.I))
-                if name_th and name_th.find_next_sibling('td'):
-                    full_name = name_th.find_next_sibling('td').get_text(strip=True)
-                
-                department = "Pending"
-                dept_th = soup.find('th', string=re.compile(r'^\s*(Course|Department|Branch)\s*$', re.I))
-                if dept_th and dept_th.find_next_sibling('td'):
-                    department = dept_th.find_next_sibling('td').get_text(strip=True)
-                
-                profile_pic_url = f"https://api.dicebear.com/7.x/avataaars/png?seed={data.username}"
-                img_elem = soup.find('img', id='photo') or soup.find('img', class_='span2')
-                if img_elem and 'src' in img_elem.attrs:
-                    src = img_elem['src']
-                    profile_pic_url = src if src.startswith('http') else f"https://sctce.etlab.in{src}"
-                
-                # ── 🔍 SYNC STRATEGY: Auth First, Profile Second ──────────────────
-                dummy_email = f"{data.username}@sctce.ac.in"
-                
-                # Check if user already has a profile mapped
-                existing_user = supabase1.table("users").select("id").eq("etlab_id", data.username).execute()
-                known_id = existing_user.data[0]["id"] if existing_user.data else None
+                return {
+                    "status": "success",
+                    "message": "Authenticated with Supabase",
+                    "session": clean_session,
+                    "user": user_profile.data
+                }
+            except Exception as e:
+                print(f"Internal Login Error: {e}")
+                raise HTTPException(status_code=401, detail="Invalid Email or Password")
 
-                # 1. ⚡ STEP 1: Attempt to Authenticate First
+        # --- ETLAB LOGIN (Students) ---
+        session = requests.Session()
+        session.headers.update({
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+            "Referer": ETLAB_URL
+        })
+        
+        try:
+            print(f"DEBUG: Pre-visiting login page for session cookies...")
+            session.get(ETLAB_URL, timeout=10)
+            
+            # The browser inspection showed that the payload MUST look exactly like this:
+            # LoginForm[username]=...&LoginForm[password]=...&yt0=
+            # Note: No YII_CSRF_TOKEN in the body, it's cookie-based.
+            payload = {
+                "LoginForm[username]": data.username,
+                "LoginForm[password]": data.password,
+                "yt0": ""  # Must be empty as per browser capture
+            }
+
+            print(f"DEBUG: Attempting mimicking POST for {data.username}...")
+            # Headers for strict symmetry with a real browser
+            extra_headers = {
+                "Origin": "https://sctce.etlab.in",
+                "Content-Type": "application/x-www-form-urlencoded",
+            }
+            
+            response = session.post(ETLAB_URL, data=payload, headers=extra_headers, timeout=15)
+            print(f"DEBUG: ETLAB Response status: {response.status_code}")
+            print(f"DEBUG: Final URL after redirect: {response.url}")
+
+            # Note: After successful redirect, URL should contain dashboard or profile
+            if response.status_code == 200 and ("Dashboard" in response.text or "student/profile" in response.url or "student/home" in response.text or "survey" in response.url):
                 try:
-                    auth_res = supabase1.auth.sign_in_with_password({
-                        "email": dummy_email,
-                        "password": data.password
-                    })
-                except Exception as sign_in_error:
-                    # Authentication failed. This could be due to wrong password OR user doesn't exist yet.
-                    users_res = supabase1.auth.admin.list_users()
-                    ulist = getattr(users_res, 'users', users_res)
-                    target = next((u for u in ulist if u.email == dummy_email), None)
+                    from bs4 import BeautifulSoup
+                    import re
                     
-                    if not target:
-                        # User doesn't exist, create them!
+                    profile_res = session.get("https://sctce.etlab.in/student/profile", timeout=10)
+                    soup = BeautifulSoup(profile_res.text, 'html.parser')
+                    
+                    # Fetch student profile data
+                    full_name = f"User {data.username}"
+                    name_th = soup.find('th', string=re.compile(r'Name', re.I))
+                    if name_th and name_th.find_next_sibling('td'):
+                        full_name = name_th.find_next_sibling('td').get_text(strip=True)
+                    
+                    department = "Pending"
+                    dept_th = soup.find('th', string=re.compile(r'^\s*(Course|Department|Branch)\s*$', re.I))
+                    if dept_th and dept_th.find_next_sibling('td'):
+                        department = dept_th.find_next_sibling('td').get_text(strip=True)
+                    
+                    profile_pic_url = f"https://api.dicebear.com/7.x/avataaars/png?seed={data.username}"
+                    img_elem = soup.find('img', id='photo') or soup.find('img', class_='span2')
+                    if img_elem and 'src' in img_elem.attrs:
+                        src = img_elem['src']
+                        profile_pic_url = src if src.startswith('http') else f"https://sctce.etlab.in{src}"
+                    
+                    print(f"DEBUG: Scraped {full_name} from ETLAB")
+
+                    # --- SYNC STRATEGY: Auth First, Profile Second ---
+                    dummy_email = f"{data.username}@sctce.ac.in"
+                    
+                    # Check if user already has a profile mapped
+                    existing_user = supabase1.table("users").select("id").eq("etlab_id", data.username).execute()
+                    known_id = existing_user.data[0]["id"] if existing_user.data else None
+
+                    # 1. STEP 1: Attempt to Authenticate First
+                    try:
+                        auth_res = supabase1.auth.sign_in_with_password({
+                            "email": dummy_email,
+                            "password": data.password
+                        })
+                    except Exception as sign_in_error:
+                        print(f"DEBUG: Sign-in failed ({sign_in_error}).")
+                        print("DEBUG: Attempting to create the user account instead...")
+                        
                         try:
+                            # If this succeeds, the user was brand new
                             supabase1.auth.admin.create_user({
                                 "email": dummy_email,
                                 "password": data.password,
                                 "user_metadata": {"full_name": full_name},
                                 "email_confirm": True
                             })
-                            # Sign in to get the session token
+                            # Now sign in to get the token
                             auth_res = supabase1.auth.sign_in_with_password({
                                 "email": dummy_email,
                                 "password": data.password
                             })
                         except Exception as create_error:
-                            print(f"CRITICAL: Failed to create new user - {create_error}")
-                            raise HTTPException(status_code=500, detail=f"User creation failed: {create_error}")
-                    else:
-                        # User exists, but password was wrong. Try to force sync the password!
-                        try:
-                            supabase1.auth.admin.update_user_by_id(target.id, {"password": data.password})
-                            auth_res = supabase1.auth.sign_in_with_password({
-                                "email": dummy_email,
-                                "password": data.password
-                            })
-                        except Exception as e:
-                            print(f"⚠️ Password Sync Warning: {e}")
-                            raise HTTPException(status_code=401, detail="ETLAB Login ok, but failed to sync internal authentication.")
+                            error_str = str(create_error).lower()
+                            # If create_user fails because the email already exists, 
+                            # it means the user exists but their password in Supabase is out of sync with ETLAB
+                            if "already been registered" in error_str or "user already exists" in error_str:
+                                print("DEBUG: User exists but password was wrong. We need to force-sync the password.")
+                                
+                                # Since we can't reliably use list_users (it throws 403 Forbidden on free tiers),
+                                # and we don't have the UID to use update_user_by_id, 
+                                # we have a catch-22. 
+                                # But wait... if the user is in our 'users' table, we can get the ID from there!
+                                if known_id:
+                                    print(f"DEBUG: Found known UID from DB: {known_id}. Syncing password...")
+                                    try:
+                                        supabase1.auth.admin.update_user_by_id(known_id, {"password": data.password})
+                                        auth_res = supabase1.auth.sign_in_with_password({
+                                            "email": dummy_email,
+                                            "password": data.password
+                                        })
+                                    except Exception as env_e:
+                                        print(f"Password Sync Warning: {env_e}")
+                                        raise HTTPException(status_code=401, detail="ETLAB Login ok, but failed to sync internal authentication.")
+                                else:
+                                    print("CRITICAL: User exists in Auth but NOT in the public users table. Cannot sync password.")
+                                    raise HTTPException(status_code=500, detail="Database inconsistency: User exists in Auth but not in public profiles.")
+                            else:
+                                print(f"CRITICAL: Failed to create new user - {create_error}")
+                                raise HTTPException(status_code=500, detail=f"User creation failed: {create_error}")
 
-                user_id = auth_res.user.id
-                print(f"DEBUG SYNC: Login OK for {data.username}. Auth ID: {user_id}")
+                    user_id = auth_res.user.id
+                    print(f"DEBUG Sync: Login OK for {data.username}. Auth ID: {user_id}")
 
-                # ── 🚨 DEV DATA REPAIR: Fix Identity Mismatches ─────────────
-                if known_id and known_id != user_id:
-                    print(f"⚠️ ID Mismatch Detected! Migrating data from {known_id} to {user_id}...")
-                    def migrate_table(table, column):
+                    # 2. DEV DATA REPAIR: Fix Identity Mismatches
+                    if known_id and known_id != user_id:
+                        print(f"WARNING: ID Mismatch Detected! Migrating data from {known_id} to {user_id}...")
+                        def migrate_table(table, column):
+                            try:
+                                supabase1.table(table).update({column: user_id}).eq(column, known_id).execute()
+                                print(f"DEBUG: Migrated {table}")
+                            except Exception as e:
+                                print(f"DEBUG: Failed {table}: {e}")
+                        
+                        migrate_table("posts", "author_id")
+                        migrate_table("comments", "user_id")
+                        migrate_table("likes", "user_id")
+                        migrate_table("harassment_reports", "reporter_id")
+                        migrate_table("lost_and_found", "posted_by")
+
                         try:
-                            res = supabase1.table(table).update({column: user_id}).eq(column, known_id).execute()
-                            print(f" -> Migrated {table}")
+                            supabase1.table("users").delete().eq("id", known_id).execute()
+                            print("DEBUG: Purged old ghost profile.")
                         except Exception as e:
-                            print(f" -> Failed {table}: {e}")
+                            print(f"DEBUG: Failed to purge old profile: {e}")
+
+                    # 3. STEP 3: Sync Profile Table
+                    upsert_res = supabase1.table("users").upsert({
+                        "id": user_id, 
+                        "etlab_id": data.username,
+                        "full_name": full_name,
+                        "department": department,
+                        "profile_pic_url": profile_pic_url
+                    }, on_conflict="etlab_id").execute()
                     
-                    migrate_table("posts", "author_id")
-                    migrate_table("comments", "user_id")
-                    migrate_table("likes", "user_id")
-                    migrate_table("harassment_reports", "reporter_id")
-                    migrate_table("lost_and_found", "posted_by")
+                    final_user_profile = upsert_res.data[0] if upsert_res.data else {"id": user_id, "full_name": full_name}
 
-                    try:
-                        supabase1.table("users").delete().eq("id", known_id).execute()
-                        print(" -> Purged old ghost profile.")
-                    except Exception as e:
-                        print(f" -> Failed to purge old profile: {e}")
+                    # Prepare session packet
+                    clean_session = {
+                        "access_token": auth_res.session.access_token,
+                        "refresh_token": auth_res.session.refresh_token,
+                        "expires_at": auth_res.session.expires_at
+                    }
 
-                # 3. ⚡ STEP 3: Sync Profile Table
-                upsert_res = supabase1.table("users").upsert({
-                    "id": user_id, 
-                    "etlab_id": data.username,
-                    "full_name": full_name,
-                    "department": department,
-                    "profile_pic_url": profile_pic_url
-                }, on_conflict="etlab_id").execute()
-                
-                final_user_profile = upsert_res.data[0] if upsert_res.data else {"id": user_id, "full_name": full_name}
-
-                # Prepare session packet
-                clean_session = {
-                    "access_token": auth_res.session.access_token,
-                    "refresh_token": auth_res.session.refresh_token,
-                    "expires_at": auth_res.session.expires_at
-                }
-
-                print(f"✅ SUCCESS: Profile Ready for student {user_id}")
-                return {
-                    "status": "success",
-                    "session": clean_session,
-                    "user": final_user_profile
-                }
-                
-            except Exception as e:
-                import traceback
-                traceback.print_exc()
-                print(f"CRITICAL PROFILE SYNC ERROR: {e}")
-                raise HTTPException(status_code=500, detail=f"Database Profile Sync Failed: {str(e)}")
-        else:
-            raise HTTPException(status_code=401, detail="Invalid ETLAB credentials")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+                    print(f"SUCCESS: Profile Ready for student {user_id}")
+                    return {
+                        "status": "success",
+                        "session": clean_session,
+                        "user": final_user_profile
+                    }
+                    
+                except Exception as e:
+                    if isinstance(e, HTTPException): raise e
+                    import traceback
+                    traceback.print_exc()
+                    print(f"CRITICAL PROFILE SYNC ERROR: {e}")
+                    raise HTTPException(status_code=500, detail=f"Database Profile Sync Failed: {str(e)}")
+            else:
+                print(f"DEBUG: Invalid ETLAB credentials for {data.username}")
+                print(f"DEBUG: ETLAB SNIPPET: {response.text[:200]}")
+                raise HTTPException(status_code=401, detail="Invalid ETLAB credentials")
+        except Exception as e:
+            if isinstance(e, HTTPException): raise e
+            import traceback
+            traceback.print_exc()
+            print(f"ERROR: Parent catch in /login: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
+    except Exception as fatal_e:
+        if isinstance(fatal_e, HTTPException): raise fatal_e
+        import traceback
+        traceback.print_exc()
+        print(f"FATAL ERROR in /login: {fatal_e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 @app.post("/admin/create-user")
 async def admin_create_user(data: AdminCreateUser):
